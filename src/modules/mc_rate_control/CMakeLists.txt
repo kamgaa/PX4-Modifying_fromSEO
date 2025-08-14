@@ -39,6 +39,13 @@ px4_add_module(
 	SRCS
 		MulticopterRateControl.cpp
 		MulticopterRateControl.hpp
+
+		torque_disturbance_observer.cpp
+		torque_disturbance_observer.hpp
+
+		dob_based_com_estimator.cpp
+		dob_based_com_estimator.hpp
+		
 	DEPENDS
 		circuit_breaker
 		mathlib

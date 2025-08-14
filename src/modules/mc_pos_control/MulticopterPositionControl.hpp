@@ -37,10 +37,13 @@
 
 #pragma once
 
-#include "PositionControl/PositionControl.hpp"
-#include "Takeoff/Takeoff.hpp"
-#include "GotoControl/GotoControl.hpp"
 
+#include "PositionControl/PositionControl.hpp"
+#include "GotoControl.hpp"
+
+#include <lib/geo/geo.h>
+#include <matrix/matrix/math.hpp>
+#include <mathlib/mathlib.h>
 #include <drivers/drv_hrt.h>
 #include <lib/controllib/blocks.hpp>
 #include <lib/perf/perf_counter.h>
@@ -63,8 +66,13 @@
 #include <uORB/topics/vehicle_constraints.h>
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_land_detected.h>
+#include <uORB/topics/vehicle_attitude.h> //custom
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
+#include <uORB/topics/manual_control_setpoint.h> // custom
+#include <uORB/topics/custom_control_mode.h> // custom
+#include <uORB/topics/custom_command_position_mode.h> // custom
+
 
 using namespace time_literals;
 
@@ -84,16 +92,15 @@ public:
 	/** @see ModuleBase */
 	static int print_usage(const char *reason = nullptr);
 
+	int print_status(); // custom
+
 	bool init();
 
 private:
 	void Run() override;
 
-	TakeoffHandling _takeoff; /**< state machine and ramp to bring the vehicle off the ground without jumps */
-
 	orb_advert_t _mavlink_log_pub{nullptr};
 
-	uORB::PublicationData<takeoff_status_s>              _takeoff_status_pub{ORB_ID(takeoff_status)};
 	uORB::Publication<vehicle_attitude_setpoint_s>	     _vehicle_attitude_setpoint_pub{ORB_ID(vehicle_attitude_setpoint)};
 	uORB::Publication<vehicle_local_position_setpoint_s> _local_pos_sp_pub{ORB_ID(vehicle_local_position_setpoint)};	/**< vehicle local position setpoint publication */
 
@@ -106,12 +113,19 @@ private:
 	uORB::Subscription _vehicle_constraints_sub{ORB_ID(vehicle_constraints)};
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
+	uORB::Subscription _manual_control_setpoint_sub{ORB_ID(manual_control_setpoint)};
+	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
+	uORB::Subscription _custom_control_mode_sub{ORB_ID(custom_control_mode)}; // custom
+	uORB::Subscription _custom_command_position_mode_sub{ORB_ID(custom_command_position_mode)}; // custom
+
 
 	hrt_abstime _time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 	hrt_abstime _time_position_control_enabled{0};
 
-	trajectory_setpoint_s _setpoint{PositionControl::empty_trajectory_setpoint};
 	vehicle_control_mode_s _vehicle_control_mode{};
+
+	custom_control_mode_s _custom_control_mode{}; // custom
+	custom_command_position_mode_s _custom_command_position_mode{}; // custom
 
 	vehicle_constraints_s _vehicle_constraints {
 		.timestamp = 0,
@@ -143,6 +157,8 @@ private:
 		(ParamFloat<px4::params::MPC_Z_VEL_MAX_UP>) _param_mpc_z_vel_max_up,
 		(ParamFloat<px4::params::MPC_Z_V_AUTO_DN>)  _param_mpc_z_v_auto_dn,
 		(ParamFloat<px4::params::MPC_Z_VEL_MAX_DN>) _param_mpc_z_vel_max_dn,
+		(ParamFloat<px4::params::MPC_XY_ACC_MAX>) 	_param_mpc_xy_acc_max,
+		(ParamFloat<px4::params::MPC_Z_ACC_MAX_UP>) _param_mpc_z_acc_max_up,
 		(ParamFloat<px4::params::MPC_TILTMAX_AIR>)  _param_mpc_tiltmax_air,
 		(ParamFloat<px4::params::MPC_THR_HOVER>)    _param_mpc_thr_hover,
 		(ParamBool<px4::params::MPC_USE_HTE>)       _param_mpc_use_hte,
@@ -189,8 +205,9 @@ private:
 	control::BlockDerivative _vel_y_deriv; /**< velocity derivative in y */
 	control::BlockDerivative _vel_z_deriv; /**< velocity derivative in z */
 
-	GotoControl _goto_control; ///< class for handling smooth goto position setpoints
 	PositionControl _control; ///< class for core PID position control
+	PositionControlStates _states;
+	GotoControl _goto_control; ///< class for handling smooth goto position setpoints
 
 	hrt_abstime _last_warn{0}; /**< timer when the last warn message was sent out */
 
@@ -211,6 +228,26 @@ private:
 	uint8_t _xy_reset_counter{0};
 	uint8_t _z_reset_counter{0};
 	uint8_t _heading_reset_counter{0};
+
+	matrix::Vector3f gain_check;
+	matrix::Vector4f pose_setpoint{0.f, 0.f, 0.f, 0.f};
+	float pose_z_setpoint = 0.f;
+
+	matrix::Vector4f base_setpoint{0.f, 0.f, 0.f, 0.f};
+	matrix::Vector4f manual_setpoint{0.f, 0.f, 0.f, 0.0f};
+	matrix::Vector4f custom_command_position{0.f, 0.f, 0.f, 0.0f}; // SEUK
+
+	float roll  = 0.f;
+	float pitch = 0.f;
+	float yaw   = 0.f;
+
+	double lat, lon = 0.f;
+	float alt = 0.f;
+	float time_count = 0.f;
+	float wave_z = 0.f;
+	//float wave_amp = 0.2f;
+	//float wave_freq = 0.f;
+	float dt_check = 0.f;
 
 	perf_counter_t _cycle_perf{perf_alloc(PC_ELAPSED, MODULE_NAME": cycle time")};
 
@@ -239,6 +276,8 @@ private:
 	 * @param[in] vehicle_local_position struct containing EKF reset deltas and counters
 	 * @param[out] setpoint trajectory setpoint struct to be adjusted
 	 */
-	void adjustSetpointForEKFResets(const vehicle_local_position_s &vehicle_local_position,
+
+	 void adjustSetpointForEKFResets(const vehicle_local_position_s &vehicle_local_position,
 					trajectory_setpoint_s &setpoint);
+
 };
