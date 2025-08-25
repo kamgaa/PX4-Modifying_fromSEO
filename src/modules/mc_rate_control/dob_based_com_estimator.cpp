@@ -85,8 +85,8 @@ matrix::Vector3f present_com_hat{0.f,0.f,0.f};
 matrix::Vector3f com_hat_dot;
 
 float root2_est = sqrtf(2.0f);
-float torque_dob_fc_est = 0.5f; //origin :: 10
-float est_gamma = 0.001; // estimator gain : origin -> 0.0001f
+float torque_dob_fc_est = 3.0f; //origin :: 10   [rad]
+float est_gamma = 0.0001; // estimator gain : origin -> 0.0001f
 float control_hz = 665; //[hz]
 float k = 1.f/0.8f; // voltage drop gain
 float Jxx_est = 0.23f; // 0.25
@@ -97,9 +97,9 @@ float Jzz_est = 0.23f;
 
 void constrain_vector3_components(matrix::Vector3f &v)
 {
-    v(0) = math::constrain(v(0), -0.1f, 0.1f);  // x축 제한
-    v(1) = math::constrain(v(1), -0.1f, 0.1f);  // y축 제한
-    v(2) = math::constrain(v(2), -0.1f, 0.0f);  // z축 제한
+    v(0) = math::constrain(v(0), -0.4f, 0.4f);  // x축 제한
+    v(1) = math::constrain(v(1), -0.4f, 0.4f);  // y축 제한
+    v(2) = math::constrain(v(2), -0.02f, 0.0f);  // z축 제한
 }
 
 //void dob_based_com_estimator(matrix::Vector3f torque_dhat, matrix::Vector3f body_force_desired, matrix::Vector3f &present_com_hat, matrix::Vector3f &past_com_hat);

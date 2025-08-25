@@ -394,16 +394,55 @@ MulticopterRateControl::Run()
 			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ Yaw trimming Logic ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 
-			float yaw_limit = 0.1f;//_param_mc_yaw_trim.get();
-			float yaw_input = vehicle_torque_setpoint.xyz[2];
+			// float yaw_limit = 0.2f;//_param_mc_yaw_trim.get();
+			// float yaw_input = vehicle_torque_setpoint.xyz[2];
 
-			if (fabsf(yaw_input) > yaw_limit) {
-				float sign = yaw_input > 0.f ? 1.f : -1.f;
+			// if (fabsf(yaw_input) > yaw_limit) {
+			// 	float sign = yaw_input > 0.f ? 1.f : -1.f;
 
-				vehicle_torque_setpoint.yaw_trim = yaw_input - yaw_limit * sign;
-				vehicle_torque_setpoint.xyz[2] = yaw_limit * sign;
-			} else {
+			// 	vehicle_torque_setpoint.yaw_trim = yaw_input - yaw_limit * sign;
+			// 	vehicle_torque_setpoint.xyz[2] = yaw_limit * sign;
+			// } else {
+			// 	vehicle_torque_setpoint.yaw_trim = 0.f;
+			// }
+
+
+			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ Yaw trimming Logic ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+			// ===== Yaw trimming Logic → Split: RT + TVC =====
+			constexpr float kYawSplitFc_Hz = 0.7f;   // TVC용 저역 (고정값) [hz]
+			constexpr float kYawRtMax_Nm   = 0.3f;   // RT 권한 한계 [Nm]
+
+			// 원하는 yaw torque (비정상값만 0으로)
+			float tau_z_des = vehicle_torque_setpoint.xyz[2];
+			if (!PX4_ISFINITE(tau_z_des)) tau_z_des = 0.f;
+
+
+			// dt 가드: 비정상 dt면 RT만 제한, TVC는 0
+			if (!(dt > 0.f)) {
+				vehicle_torque_setpoint.xyz[2]  = math::constrain(tau_z_des, -kYawRtMax_Nm, +kYawRtMax_Nm);
 				vehicle_torque_setpoint.yaw_trim = 0.f;
+			} else {
+				// LPF 초기화 (최초 1회)
+				if (!_lpf_tauz_initialized) {
+					const float fs = 1.f / dt;                       // [Hz]
+					_lpf_tauz.setButter2Lowpass(kYawSplitFc_Hz, fs); // 2차 Butterworth
+					_lpf_tauz_initialized = true;
+				}
+
+			// LPF → 느린 성분 (TVC), 여역 → 빠른 성분 (RT)
+			const float tau_z_bar  = _lpf_tauz_initialized ? _lpf_tauz.step(tau_z_des) : 0.f;  // 일단 low freq 성분을 TVC에 할당해
+			const float tau_z_fast = tau_z_des - tau_z_bar;	// 그리고 나머지 성분(High freq)을 RT에 할당해
+
+			// RT 포화, 초과는 TVC로 넘김
+			const float tau_z_r = math::constrain(tau_z_fast, -kYawRtMax_Nm, +kYawRtMax_Nm);	// RT에 할당된 성분 중 "너무 큰 토크" 성분은 제외해
+			const float tau_z_t = tau_z_bar + (tau_z_fast - tau_z_r);	// 그리고 그 성분들은 다시 TVC에 할당해
+
+			
+			// 결과 배치
+			vehicle_torque_setpoint.xyz[2]  = tau_z_r; // RT (모터 반작용) : High Freq 및 Saturation 이내
+			vehicle_torque_setpoint.yaw_trim = tau_z_t; // TVC (서보/편향추력) : Low Freq 및 Saturation 밖
 			}
 
 			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //

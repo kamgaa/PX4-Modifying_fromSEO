@@ -67,9 +67,35 @@
 
 #include "torque_disturbance_observer.hpp" // custom
 #include "dob_based_com_estimator.hpp" // custom
-
+#include <cmath>
 
 using namespace time_literals;
+
+// ===== 2nd-order LPF (DF2T) for yaw torque split =====
+struct Biquad {
+    float b0{0.f}, b1{0.f}, b2{0.f}, a1{0.f}, a2{0.f};
+    float s1{0.f}, s2{0.f};
+
+	inline void setButter2Lowpass(float fc_Hz, float fs_Hz) {
+		constexpr float PI_F = 3.14159265358979323846f;   // float 버전
+		const float K = tanf(PI_F * fc_Hz / fs_Hz);
+		const float inv = 1.f / (1.f + sqrtf(2.f) * K + K*K);
+		b0 = K*K * inv;
+		b1 = 2.f * b0;
+		b2 = b0;
+		a1 = 2.f * (K*K - 1.f) * inv;
+		a2 = (1.f - sqrtf(2.f) * K + K*K) * inv;
+		s1 = s2 = 0.f;
+	}
+	
+
+    inline float step(float x) {
+        const float y = b0*x + s1;
+        s1 = b1*x - a1*y + s2;
+        s2 = b2*x - a2*y;
+        return y;
+    }
+};
 
 class MulticopterRateControl : public ModuleBase<MulticopterRateControl>, public ModuleParams, public px4::WorkItem
 {
@@ -102,6 +128,11 @@ public:
 private:
 	void Run() override;
 
+	// yaw trim
+    Biquad _lpf_tauz{};
+    bool   _lpf_tauz_initialized{false};
+	
+	
 	/**
 	 * initialize some vectors/matrices from parameters
 	 */

@@ -47,7 +47,7 @@ matrix::Matrix<float, 1,2>  Q_T_C;
  matrix::Matrix<float, 1,1>  Q_T_Z_y;
 
 
-float torque_dob_fc = 0.5f; //origin :: 10.f
+float torque_dob_fc = 3.0f; //origin :: 10.f
 float dhat_tau_r = 0.f;
 float dhat_tau_p = 0.f;
 float dhat_tau_y = 0.f;

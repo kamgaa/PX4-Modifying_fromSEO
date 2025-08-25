@@ -187,9 +187,9 @@ void PositionControl::_positionControl()
 
 	Vector3f vel_sp_position;
 
-	vel_sp_position(0) = (_pos_sp(0) - _pos(0))*static_cast<float>(1.0) - _vel(0)*static_cast<float>(0.0);  //SEUK 여기는 하드코딩 되어있음.
-	vel_sp_position(1) = (_pos_sp(1) - _pos(1))*static_cast<float>(1.0) - _vel(1)*static_cast<float>(0.0);
-	vel_sp_position(2) = (_pos_sp(2) - _pos(2))*static_cast<float>(0.5) - _vel(2)*static_cast<float>(0.1);
+	vel_sp_position(0) = (_pos_sp(0) - _pos(0))*static_cast<float>(1.2001) - _vel(0)*static_cast<float>(0.0);  //SEUK 여기는 하드코딩 되어있음.
+	vel_sp_position(1) = (_pos_sp(1) - _pos(1))*static_cast<float>(1.2001) - _vel(1)*static_cast<float>(0.0);
+	vel_sp_position(2) = (_pos_sp(2) - _pos(2))*static_cast<float>(0.7001) - _vel(2)*static_cast<float>(0.1);
 	// pz : 1,   dz : 0.05
 	// pz : 0.5, dz : 0.025
 	// pz : 0.5, dz : 0.25

@@ -107,6 +107,12 @@ publications:
   - topic: /fmu/out/torque_dhat
     type: px4_msgs::msg::TorqueDhat
 
+  - topic: /fmu/out/input_rc
+    type: px4_msgs::msg::InputRc
+    
+  - topic: /fmu/out/actuator_motors
+    type: px4_msgs::msg::ActuatorMotors
+
 # Create uORB::Publication
 subscriptions:
 
@@ -176,9 +182,6 @@ subscriptions:
 
   - topic: /fmu/in/vehicle_command_mode_executor
     type: px4_msgs::msg::VehicleCommand
-
-  - topic: /fmu/in/actuator_motors
-    type: px4_msgs::msg::ActuatorMotors
 
   - topic: /fmu/in/actuator_servos
     type: px4_msgs::msg::ActuatorServos

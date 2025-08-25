@@ -8,5 +8,6 @@
         "utility": "cpp",
         "variant": "cpp",
         "ranges": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/mrlnuc1/Downloads/PX4-Autopilot/src/modules/esc_battery"
 }

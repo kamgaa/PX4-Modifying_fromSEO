@@ -172,7 +172,7 @@ ControlAllocator::Run()
 
 		xc = com_update.com_update[0];
 		yc = com_update.com_update[1]; //-0.04f
-		zc = 0.f;//com_update.com_update[2];
+		zc = com_update.com_update[2];
 
 	}
 
