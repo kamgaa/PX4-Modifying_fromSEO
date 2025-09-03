@@ -44,7 +44,7 @@
  *
  * @min 0.01
  * @max 3.0
- * @decimal 3
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
@@ -56,7 +56,7 @@ PARAM_DEFINE_FLOAT(MC_ROLLRATE_P, 1.0f); // 0.5 // 1.0
  * Roll rate integral gain. Can be set to compensate static thrust difference or gravity center offset.
  *
  * @min 0.0
- * @decimal 3
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
@@ -68,7 +68,7 @@ PARAM_DEFINE_FLOAT(MC_ROLLRATE_I, 0.1f);
  * Roll rate integrator limit. Can be set to increase the amount of integrator available to counteract disturbances or reduced to improve settling time after large roll moment trim changes.
  *
  * @min 0.0
- * @decimal 2
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
@@ -125,7 +125,7 @@ PARAM_DEFINE_FLOAT(MC_ROLLRATE_K, 1.0f);
  *
  * @min 0.01
  * @max 3.0
- * @decimal 3
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
@@ -137,7 +137,7 @@ PARAM_DEFINE_FLOAT(MC_PITCHRATE_P, 1.0f); // 0.5 / 1.0
  * Pitch rate integral gain. Can be set to compensate static thrust difference or gravity center offset.
  *
  * @min 0.0
- * @decimal 3
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
@@ -149,7 +149,7 @@ PARAM_DEFINE_FLOAT(MC_PITCHRATE_I, 0.1f);
  * Pitch rate integrator limit. Can be set to increase the amount of integrator available to counteract disturbances or reduced to improve settling time after large pitch moment trim changes.
  *
  * @min 0.0
- * @decimal 2
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
@@ -205,11 +205,11 @@ PARAM_DEFINE_FLOAT(MC_PITCHRATE_K, 1.0f);
  *
  * @min 0.0
  * @max 5.0
- * @decimal 2
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
-PARAM_DEFINE_FLOAT(MC_YAWRATE_P, 0.5f); // 0.25 / 0.5
+PARAM_DEFINE_FLOAT(MC_YAWRATE_P, 0.25f); // 0.25 / 0.5
 
 /**
  * Yaw rate I gain
@@ -217,7 +217,7 @@ PARAM_DEFINE_FLOAT(MC_YAWRATE_P, 0.5f); // 0.25 / 0.5
  * Yaw rate integral gain. Can be set to compensate static thrust difference or gravity center offset.
  *
  * @min 0.0
- * @decimal 2
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */
@@ -241,7 +241,7 @@ PARAM_DEFINE_FLOAT(MC_YR_INT_LIM, 0.30f);
  * Yaw rate differential gain. Small values help reduce fast oscillations. If value is too big oscillations will appear again.
  *
  * @min 0.0
- * @decimal 2
+ * @decimal 4
  * @increment 0.01
  * @group Multicopter Rate Control
  */

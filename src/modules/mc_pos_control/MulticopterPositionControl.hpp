@@ -146,6 +146,8 @@ private:
 		// Position Control
 		(ParamFloat<px4::params::MPC_XY_P>)         _param_mpc_xy_p,
 		(ParamFloat<px4::params::MPC_Z_P>)          _param_mpc_z_p,
+		(ParamFloat<px4::params::MPC_XY_D>)         _param_mpc_xy_d,   // ← 추가
+		(ParamFloat<px4::params::MPC_Z_D>)          _param_mpc_z_d,    // ← 추가
 		(ParamFloat<px4::params::MPC_XY_VEL_P_ACC>) _param_mpc_xy_vel_p_acc,
 		(ParamFloat<px4::params::MPC_XY_VEL_I_ACC>) _param_mpc_xy_vel_i_acc,
 		(ParamFloat<px4::params::MPC_XY_VEL_D_ACC>) _param_mpc_xy_vel_d_acc,

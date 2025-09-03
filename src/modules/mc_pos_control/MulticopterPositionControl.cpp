@@ -151,8 +151,10 @@ void MulticopterPositionControl::parameters_update(bool force)
 		// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 
 		// Position, Velocity Controller Gain Definition Part
-		_control.setPositionGains(Vector3f(_param_mpc_xy_p.get(), _param_mpc_xy_p.get(), _param_mpc_z_p.get()),
-								  Vector3f(_param_mpc_xy_p.get(), _param_mpc_xy_p.get(), 0.f));
+		_control.setPositionGains(
+			  Vector3f(_param_mpc_xy_p.get(), _param_mpc_xy_p.get(), _param_mpc_z_p.get()),
+			  Vector3f(_param_mpc_xy_d.get(), _param_mpc_xy_d.get(), _param_mpc_z_d.get()));
+
 		_control.setVelocityGains(
 			Vector3f(_param_mpc_xy_vel_p_acc.get(), _param_mpc_xy_vel_p_acc.get(), _param_mpc_z_vel_p_acc.get()),
 			Vector3f(_param_mpc_xy_vel_i_acc.get(), _param_mpc_xy_vel_i_acc.get(), _param_mpc_z_vel_i_acc.get()),
@@ -272,6 +274,14 @@ void MulticopterPositionControl::parameters_update(bool force)
 		_param_mpc_tko_speed.set(math::min(_param_mpc_tko_speed.get(), _param_mpc_z_vel_max_up.get()));
 		_param_mpc_land_speed.set(math::min(_param_mpc_land_speed.get(), _param_mpc_z_vel_max_dn.get()));
 
+
+	_control.setVelocityLimits(_param_mpc_xy_vel_max.get(),
+							   _param_mpc_z_vel_max_up.get(),
+							   _param_mpc_z_vel_max_dn.get());
+	
+	_control.setAccelerationLimits(_param_mpc_xy_acc_max.get(),
+								   _param_mpc_z_acc_max_up.get());
+
 	}
 	// ############################### PARAMETER UPDATE END ####################################### //
 }
@@ -363,15 +373,22 @@ void MulticopterPositionControl::Run()
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 
-	const float dt =
-				math::constrain(((vehicle_local_position.timestamp_sample - _time_stamp_last_loop) * 1e-6f), 0.002f, 0.04f);
-			_time_stamp_last_loop = vehicle_local_position.timestamp_sample;
+	// 먼저 최신 LPOS를 받아와야 timestamp_sample을 쓸 수 있다
+	if (!_local_pos_sub.update(&vehicle_local_position)) {
+		// 새 샘플이 없으면 현재 시간 기준으로 dt 보정 후 다음 사이클로
+		const hrt_abstime now = hrt_absolute_time();
+		const float dt = math::constrain((now - _time_stamp_last_loop) * 1e-6f, 0.002f, 0.04f);
+		_time_stamp_last_loop = now;
+		setDt(dt);
+		perf_end(_cycle_perf);
+		return;
+	}
 
-			// set _dt in controllib Block for BlockDerivative
-
+	// 새 샘플이 있으므로 그 타임스탬프로 dt 계산
+	const float dt = math::constrain((vehicle_local_position.timestamp_sample - _time_stamp_last_loop) * 1e-6f, 0.002f, 0.04f);
+	_time_stamp_last_loop = vehicle_local_position.timestamp_sample;
 	setDt(dt);
 
-	// dt_check = dt;
 
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
@@ -425,7 +442,7 @@ void MulticopterPositionControl::Run()
 
 
 	// if((double)manual_setpoint(2) > 0.0){manual_setpoint(2) = 0.0;}
-	float altitude_limit = 0.8f;
+	float altitude_limit = 0.7f;
 
 	if(manual_setpoint(2)< -0.4f){pose_z_setpoint -= 0.001f;}
 	else if(manual_setpoint(2)> +0.4f){pose_z_setpoint += 0.001f;}
@@ -436,8 +453,7 @@ void MulticopterPositionControl::Run()
 	if(pose_z_setpoint > 0.0f){pose_z_setpoint = 0.0f;}
 
 
-	if (_local_pos_sub.update(&vehicle_local_position)) {
-
+	{
 		_vehicle_land_detected_sub.update(&_vehicle_land_detected);
 
 		_states = set_vehicle_states(vehicle_local_position);
@@ -455,6 +471,7 @@ void MulticopterPositionControl::Run()
 		//alt = vehicle_local_position.ref_alt - vehicle_local_position.z;  // 고도 변환
 		alt = vehicle_local_position.z;
 	}
+
 
 	if(!_vehicle_control_mode.flag_armed){
 

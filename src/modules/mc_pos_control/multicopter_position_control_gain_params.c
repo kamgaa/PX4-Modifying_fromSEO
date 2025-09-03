@@ -38,7 +38,7 @@
  *
  * @min 0.1
  * @max 1.5
- * @decimal 2
+ * @decimal 4
  * @increment 0.1
  * @group Multicopter Position Control
  */
@@ -50,8 +50,8 @@ PARAM_DEFINE_FLOAT(MPC_Z_P, 1.0); // 1.
  * Defined as corrective velocity in m/s per m position error
  *
  * @min 0
- * @max 2
- * @decimal 2
+ * @max 4
+ * @decimal 4
  * @increment 0.1
  * @group Multicopter Position Control
  */
@@ -63,12 +63,26 @@ PARAM_DEFINE_FLOAT(MPC_XY_P, 1.0); // 1.
  * Defined as corrective velocity in m/s per m position error
  *
  * @min 0
- * @max 2
- * @decimal 2
+ * @max 4
+ * @decimal 4
  * @increment 0.1
  * @group Multicopter Position Control
  */
 PARAM_DEFINE_FLOAT(MPC_XY_D, 0.0);
+
+/**
+ * Differential gain for vertical position error
+ *
+ * v_sp_z = Pz*(z_err) - Dz*(vz)
+ * Unitless.
+ *
+ * @min 0
+ * @max 4
+ * @decimal 4
+ * @increment 0.1
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(MPC_Z_D, 0.0);
 
 /**
  * Proportional gain for vertical velocity error
@@ -77,7 +91,7 @@ PARAM_DEFINE_FLOAT(MPC_XY_D, 0.0);
  *
  * @min 0.0
  * @max 15
- * @decimal 2
+ * @decimal 4
  * @increment 0.1
  * @group Multicopter Position Control
  */
@@ -90,10 +104,10 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_P_ACC, 1.0); // 1.
  *
  * @min 0
  * @max 5
- * @decimal 2
+ * @decimal 4
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_VEL_P_ACC, 2.0); // 1.
+PARAM_DEFINE_FLOAT(MPC_XY_VEL_P_ACC, 1.0); // 1.
 
 /**
  * Integral gain for vertical velocity error
@@ -102,7 +116,7 @@ PARAM_DEFINE_FLOAT(MPC_XY_VEL_P_ACC, 2.0); // 1.
  *
  * @min 0
  * @max 3000
- * @decimal 2
+ * @decimal 4
  * @increment 0.1
  * @group Multicopter Position Control
  */
@@ -116,7 +130,7 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_I_ACC, 0.0);
  *
  * @min 0
  * @max 60
- * @decimal 2
+ * @decimal 4
  * @increment 0.02
  * @group Multicopter Position Control
  */
@@ -128,8 +142,8 @@ PARAM_DEFINE_FLOAT(MPC_XY_VEL_I_ACC, 0.0);
  * Defined as corrective acceleration in m/s^2 per m/s^2 velocity derivative
  *
  * @min 0
- * @max 2
- * @decimal 2
+ * @max 4
+ * @decimal 4
  * @increment 0.02
  * @group Multicopter Position Control
  */
@@ -141,8 +155,8 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_D_ACC, 0.07); // 0.07
  * Defined as corrective acceleration in m/s^2 per m/s^2 velocity derivative
  *
  * @min 0
- * @max 2
- * @decimal 2
+ * @max 4
+ * @decimal 4
  * @increment 0.02
  * @group Multicopter Position Control
  */
