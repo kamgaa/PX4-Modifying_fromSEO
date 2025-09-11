@@ -109,9 +109,12 @@ publications:
 
   - topic: /fmu/out/input_rc
     type: px4_msgs::msg::InputRc
-    
+
   - topic: /fmu/out/actuator_motors
     type: px4_msgs::msg::ActuatorMotors
+
+  - topic: /fmu/out/custom_dt   # Custom
+    type: px4_msgs::msg::CustomDt
 
 # Create uORB::Publication
 subscriptions:

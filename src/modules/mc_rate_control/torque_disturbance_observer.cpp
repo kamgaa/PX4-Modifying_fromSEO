@@ -1,79 +1,76 @@
 
 #include "torque_disturbance_observer.hpp"
 #include <matrix/matrix/math.hpp>
+#include <cmath>
+
 
 using matrix::Vector;
 
 
-////////////// torque DOB /////////////////
+namespace {   // ← 전역 상태 캡슐화 시작
 
- matrix::Matrix<float, 2,2>  MinvQ_T_A;
- matrix::Matrix<float, 2,1>  MinvQ_T_B;
+// ============ torque DOB 상태 변수들 ============ //
+matrix::Matrix<float, 2,2>  MinvQ_T_A;
+matrix::Matrix<float, 2,1>  MinvQ_T_B;
 
- matrix::Matrix<float, 1,2>  MinvQ_T_C_x;
- matrix::Matrix<float, 1,2>  MinvQ_T_C_y;
- matrix::Matrix<float, 1,2>  MinvQ_T_C_z;
-
+matrix::Matrix<float, 1,2>  MinvQ_T_C_x;
+matrix::Matrix<float, 1,2>  MinvQ_T_C_y;
+matrix::Matrix<float, 1,2>  MinvQ_T_C_z;
 
 matrix::Matrix<float, 2,2>  Q_T_A;
 matrix::Matrix<float, 2,1>  Q_T_B;
 matrix::Matrix<float, 1,2>  Q_T_C;
 
- matrix::Matrix<float, 2,1>  MinvQ_T_X_x;
- matrix::Matrix<float, 2,1>  MinvQ_T_X_x_dot;
- matrix::Matrix<float, 1,1>  MinvQ_T_X_y;
+matrix::Matrix<float, 2,1>  MinvQ_T_X_x;
+matrix::Matrix<float, 2,1>  MinvQ_T_X_x_dot;
+matrix::Matrix<float, 1,1>  MinvQ_T_X_y;
 
- matrix::Matrix<float, 2,1>  Q_T_X_x;
- matrix::Matrix<float, 2,1>  Q_T_X_x_dot;
- matrix::Matrix<float, 1,1>  Q_T_X_y;
+matrix::Matrix<float, 2,1>  Q_T_X_x;
+matrix::Matrix<float, 2,1>  Q_T_X_x_dot;
+matrix::Matrix<float, 1,1>  Q_T_X_y;
 
- matrix::Matrix<float, 2,1>  MinvQ_T_Y_x;
- matrix::Matrix<float, 2,1>  MinvQ_T_Y_x_dot;
- matrix::Matrix<float, 1,1>  MinvQ_T_Y_y;
+matrix::Matrix<float, 2,1>  MinvQ_T_Y_x;
+matrix::Matrix<float, 2,1>  MinvQ_T_Y_x_dot;
+matrix::Matrix<float, 1,1>  MinvQ_T_Y_y;
 
+matrix::Matrix<float, 2,1>  Q_T_Y_x;
+matrix::Matrix<float, 2,1>  Q_T_Y_x_dot;
+matrix::Matrix<float, 1,1>  Q_T_Y_y;
 
- matrix::Matrix<float, 2,1>  Q_T_Y_x;
- matrix::Matrix<float, 2,1>  Q_T_Y_x_dot;
- matrix::Matrix<float, 1,1>  Q_T_Y_y;
+matrix::Matrix<float, 2,1>  MinvQ_T_Z_x;
+matrix::Matrix<float, 2,1>  MinvQ_T_Z_x_dot;
+matrix::Matrix<float, 1,1>  MinvQ_T_Z_y;
 
+matrix::Matrix<float, 2,1>  Q_T_Z_x;
+matrix::Matrix<float, 2,1>  Q_T_Z_x_dot;
+matrix::Matrix<float, 1,1>  Q_T_Z_y;
 
- matrix::Matrix<float, 2,1>  MinvQ_T_Z_x;
- matrix::Matrix<float, 2,1>  MinvQ_T_Z_x_dot;
- matrix::Matrix<float, 1,1>  MinvQ_T_Z_y;
-
-
- matrix::Matrix<float, 2,1>  Q_T_Z_x;
- matrix::Matrix<float, 2,1>  Q_T_Z_x_dot;
- matrix::Matrix<float, 1,1>  Q_T_Z_y;
-
-
-float torque_dob_fc = 3.0f; //origin :: 10.f
+// ============ 파라미터/상태 ============ //
+float torque_dob_fc = 3.0f; // radian임.!!     6rad = 1 hz임
 float dhat_tau_r = 0.f;
 float dhat_tau_p = 0.f;
 float dhat_tau_y = 0.f;
 
-float root2 = sqrtf(2.0f); // root(2) = 1.414 :: damping factor = 0.707
+float root2 = sqrtf(2.0f); // damping factor = 0.707
 
-///// Original MoI /////
-float Jxx = 0.23f; // 0.25
-float Jyy = 0.23f;
-float Jzz = 0.23f;
+// 관성 추정값
+float Jxx = 0.15f; //
+float Jyy = 0.15f;
+float Jzz = 0.20f;
 
-
-
+// ============ 내부 유틸 ============ //
 float constrain_with_sign(float value, float limit = 10.0f)
 {
-  if (!std::isfinite(value)) {
-    return 0.f; // 또는 다른 대체값
-  }
-
-
-    if (fabsf(value) > limit) {
-        return copysignf(limit, value); // limit의 크기를 value의 부호와 함께 반환
-    } else {
-        return value; // 그대로 통과
+    if (!std::isfinite(value)) {
+        return 0.f;
     }
+    if (fabsf(value) > limit) {
+        return copysignf(limit, value);
+    }
+    return value;
 }
+
+} // namespace   ← 전역 상태 캡슐화 끝
 
 
 
@@ -90,7 +87,7 @@ void torque_DOB(float dt, matrix::Vector3f tau_rpy_desired, matrix::Vector3f imu
   float tau_p=tau_rpy_desired(1);
   float tau_y=tau_rpy_desired(2);
 
-  float fc2 = pow(torque_dob_fc, 2);
+  float fc2 = torque_dob_fc * torque_dob_fc;
 
 
 

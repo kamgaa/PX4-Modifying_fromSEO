@@ -48,6 +48,7 @@ set(msg_files
 	WrenchCommand.msg
 	CustomControlMode.msg
 	CustomCommandPositionMode.msg # SU
+	CustomDt.msg
 	CenterOfMass.msg
 	TorqueDhat.msg
 

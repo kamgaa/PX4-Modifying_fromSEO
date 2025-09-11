@@ -45,9 +45,13 @@
 #include <circuit_breaker/circuit_breaker.h>
 #include <mathlib/math/Limits.hpp>
 #include <mathlib/math/Functions.hpp>
+#include <cmath> // isnan()
+#include <uORB/Publication.hpp>
+#include <uORB/topics/custom_dt.h>
 
 using namespace matrix;
 using namespace time_literals;
+
 
 ControlAllocator::ControlAllocator() :
 	ModuleParams(nullptr),
@@ -172,7 +176,7 @@ ControlAllocator::Run()
 
 		xc = com_update.com_update[0];
 		yc = com_update.com_update[1]; //-0.04f
-		zc = com_update.com_update[2];
+		zc = 0;//com_update.com_update[2];
 
 	}
 
@@ -236,10 +240,11 @@ ControlAllocator::Run()
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ CONTROL ALLOCATION START ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 	if (do_update) {
-		_last_run = now;
 
-		update_effectiveness_matrix_if_needed();
+			_last_run = now;
 
+			update_effectiveness_matrix_if_needed();
+			
 	}
 
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
@@ -268,10 +273,11 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	_control_sp(3) = _thrust_sp(2); // -22.0 : 음수여야함
 
 	// Assign control effectiveness matrix
-	float xi = 0.01;
+	float xi = 0.01;	// so called b-over-k
 	float r2 = sqrt(2);
 	float r_arm = 0.21;
 	float l_servo = 0.02;
+	bool allocation_version_1 = true;
 	/*
 	float th1 = 0.0; //rad
 	float th2 = 0.0; //rad
@@ -290,39 +296,92 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	//
 	//
 
-	// 1x1
-	_custom_effectiveness(0,0) = (yc+r_arm/r2)*cosf(_servo_ang(0))+(-(l_servo-zc)+xi)*sinf(_servo_ang(0))/r2;
-	// 1x2
-	_custom_effectiveness(0,1) = (yc+r_arm/r2)*cosf(_servo_ang(1))+((l_servo-zc)-xi)*sinf(_servo_ang(1))/r2;
-	// 1x3
-	_custom_effectiveness(0,2) = (yc-r_arm/r2)*cosf(_servo_ang(2))+((l_servo-zc)-xi)*sinf(_servo_ang(2))/r2;
-	// 1x4
-	_custom_effectiveness(0,3) = (yc-r_arm/r2)*cosf(_servo_ang(3))+(-(l_servo-zc)+xi)*sinf(_servo_ang(3))/r2;
-	// 2x1
-	_custom_effectiveness(1,0) =-(xc-r_arm/r2)*cosf(_servo_ang(0))+((l_servo-zc)+xi)*sinf(_servo_ang(0))/r2;
-	// 2x2
-	_custom_effectiveness(1,1) =-(xc+r_arm/r2)*cosf(_servo_ang(1))+((l_servo-zc)+xi)*sinf(_servo_ang(1))/r2;
-	// 2x3
-	_custom_effectiveness(1,2) =-(xc+r_arm/r2)*cosf(_servo_ang(2))+(-(l_servo-zc)-xi)*sinf(_servo_ang(2))/r2;
-	// 2x4
-	_custom_effectiveness(1,3) =-(xc-r_arm/r2)*cosf(_servo_ang(3))+(-(l_servo-zc)-xi)*sinf(_servo_ang(3))/r2;
-	// 3x1
-	_custom_effectiveness(2,0) =-xi*cosf(_servo_ang(0))+(-(xc-yc)/r2)*sinf(_servo_ang(0));
-	// 3x2
-	_custom_effectiveness(2,1) = xi*cosf(_servo_ang(1))+((xc+yc)/r2)*sinf(_servo_ang(1));
-	// 3x3
-	_custom_effectiveness(2,2) =-xi*cosf(_servo_ang(2))+((xc-yc)/r2)*sinf(_servo_ang(2));
-	// 3x4
-	_custom_effectiveness(2,3) = xi*cosf(_servo_ang(3))+(-(xc+yc)/r2)*sinf(_servo_ang(3));
 
-	// 4x1
-	_custom_effectiveness(3,0) =-cosf(_servo_ang(0));
-	// 4x2
-	_custom_effectiveness(3,1) =-cosf(_servo_ang(1));
-	// 4x3
-	_custom_effectiveness(3,2) =-cosf(_servo_ang(2));
-	// 4x4
-	_custom_effectiveness(3,3) =-cosf(_servo_ang(3));
+
+	if (allocation_version_1)
+	{
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// ------------------------------------------------- [Version. 1] ------------------------------------------------- //
+		// ----------------------------------- Com bias로 인한 yaw torque 보상을 여기서 수행  ---------------------------------- // 
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		// 1x1
+		_custom_effectiveness(0,0) = (yc+r_arm/r2)*cosf(_servo_ang(0))+(-(l_servo-zc)+xi)*sinf(_servo_ang(0))/r2;
+		// 1x2
+		_custom_effectiveness(0,1) = (yc+r_arm/r2)*cosf(_servo_ang(1))+((l_servo-zc)-xi)*sinf(_servo_ang(1))/r2;
+		// 1x3
+		_custom_effectiveness(0,2) = (yc-r_arm/r2)*cosf(_servo_ang(2))+((l_servo-zc)-xi)*sinf(_servo_ang(2))/r2;
+		// 1x4
+		_custom_effectiveness(0,3) = (yc-r_arm/r2)*cosf(_servo_ang(3))+(-(l_servo-zc)+xi)*sinf(_servo_ang(3))/r2;
+		// 2x1
+		_custom_effectiveness(1,0) =-(xc-r_arm/r2)*cosf(_servo_ang(0))+((l_servo-zc)+xi)*sinf(_servo_ang(0))/r2;
+		// 2x2
+		_custom_effectiveness(1,1) =-(xc+r_arm/r2)*cosf(_servo_ang(1))+((l_servo-zc)+xi)*sinf(_servo_ang(1))/r2;
+		// 2x3
+		_custom_effectiveness(1,2) =-(xc+r_arm/r2)*cosf(_servo_ang(2))+(-(l_servo-zc)-xi)*sinf(_servo_ang(2))/r2;
+		// 2x4
+		_custom_effectiveness(1,3) =-(xc-r_arm/r2)*cosf(_servo_ang(3))+(-(l_servo-zc)-xi)*sinf(_servo_ang(3))/r2;
+		// 3x1
+		_custom_effectiveness(2,0) =-xi*cosf(_servo_ang(0))+(-(xc-yc)/r2)*sinf(_servo_ang(0));
+		// 3x2
+		_custom_effectiveness(2,1) = xi*cosf(_servo_ang(1))+((xc+yc)/r2)*sinf(_servo_ang(1));
+		// 3x3
+		_custom_effectiveness(2,2) =-xi*cosf(_servo_ang(2))+((xc-yc)/r2)*sinf(_servo_ang(2));
+		// 3x4
+		_custom_effectiveness(2,3) = xi*cosf(_servo_ang(3))+(-(xc+yc)/r2)*sinf(_servo_ang(3));
+
+		// 4x1
+		_custom_effectiveness(3,0) =-cosf(_servo_ang(0));
+		// 4x2
+		_custom_effectiveness(3,1) =-cosf(_servo_ang(1));
+		// 4x3
+		_custom_effectiveness(3,2) =-cosf(_servo_ang(2));
+		// 4x4
+		_custom_effectiveness(3,3) =-cosf(_servo_ang(3));
+	}
+	else
+	{
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// ------------------------------------------------- [Version. 2] ------------------------------------------------- //
+		// ---------------------------------- Com bias로 인한 yaw torque 보상을 servo에서 수행  -------------------------------- // 
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		// 1x1
+		_custom_effectiveness(0,0) = (yc+r_arm/r2)*cosf(_servo_ang(0))+(-(l_servo-zc)+xi)*sinf(_servo_ang(0))/r2;
+		// 1x2
+		_custom_effectiveness(0,1) = (yc+r_arm/r2)*cosf(_servo_ang(1))+((l_servo-zc)-xi)*sinf(_servo_ang(1))/r2;
+		// 1x3
+		_custom_effectiveness(0,2) = (yc-r_arm/r2)*cosf(_servo_ang(2))+((l_servo-zc)-xi)*sinf(_servo_ang(2))/r2;
+		// 1x4
+		_custom_effectiveness(0,3) = (yc-r_arm/r2)*cosf(_servo_ang(3))+(-(l_servo-zc)+xi)*sinf(_servo_ang(3))/r2;
+		// 2x1
+		_custom_effectiveness(1,0) =-(xc-r_arm/r2)*cosf(_servo_ang(0))+((l_servo-zc)+xi)*sinf(_servo_ang(0))/r2;
+		// 2x2
+		_custom_effectiveness(1,1) =-(xc+r_arm/r2)*cosf(_servo_ang(1))+((l_servo-zc)+xi)*sinf(_servo_ang(1))/r2;
+		// 2x3
+		_custom_effectiveness(1,2) =-(xc+r_arm/r2)*cosf(_servo_ang(2))+(-(l_servo-zc)-xi)*sinf(_servo_ang(2))/r2;
+		// 2x4
+		_custom_effectiveness(1,3) =-(xc-r_arm/r2)*cosf(_servo_ang(3))+(-(l_servo-zc)-xi)*sinf(_servo_ang(3))/r2;
+		// 3x1
+		_custom_effectiveness(2,0) =-xi*cosf(_servo_ang(0));
+		// 3x2
+		_custom_effectiveness(2,1) = xi*cosf(_servo_ang(1));
+		// 3x3
+		_custom_effectiveness(2,2) =-xi*cosf(_servo_ang(2));
+		// 3x4
+		_custom_effectiveness(2,3) = xi*cosf(_servo_ang(3));
+
+		// 4x1
+		_custom_effectiveness(3,0) =-cosf(_servo_ang(0));
+		// 4x2
+		_custom_effectiveness(3,1) =-cosf(_servo_ang(1));
+		// 4x3
+		_custom_effectiveness(3,2) =-cosf(_servo_ang(2));
+		// 4x4
+		_custom_effectiveness(3,3) =-cosf(_servo_ang(3));
+	}
+
+
 
 	matrix::geninv(_custom_effectiveness, _mix);
 
@@ -330,7 +389,7 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 
 	for(int i = 0; i<4; ++i){
 		if(_actuator_sp(i) > 55.0f){_actuator_sp(i) = 55.0f;}
-		if(_actuator_sp(i) < 2.f){_actuator_sp(i) = 2.f;}
+		if(_actuator_sp(i) < 1.5f){_actuator_sp(i) = 1.5f;}
 	}
 
 
@@ -366,10 +425,16 @@ ControlAllocator::publish_actuator_controls()
 	float force_to_pwm_scale_2 = force_to_pwm_scale(_actuator_sp(2));
 	float force_to_pwm_scale_3 = force_to_pwm_scale(_actuator_sp(3));
 
-	if(actuator_motors.control[0] != NAN){thrust_commands.thrust_command[0] = _actuator_sp(0);}
-	if(actuator_motors.control[1] != NAN){thrust_commands.thrust_command[1] = _actuator_sp(1);}
-	if(actuator_motors.control[2] != NAN){thrust_commands.thrust_command[2] = _actuator_sp(2);}
-	if(actuator_motors.control[3] != NAN){thrust_commands.thrust_command[3] = _actuator_sp(3);}
+	// if(actuator_motors.control[0] != NAN){thrust_commands.thrust_command[0] = _actuator_sp(0);}
+	// if(actuator_motors.control[1] != NAN){thrust_commands.thrust_command[1] = _actuator_sp(1);}
+	// if(actuator_motors.control[2] != NAN){thrust_commands.thrust_command[2] = _actuator_sp(2);}
+	// if(actuator_motors.control[3] != NAN){thrust_commands.thrust_command[3] = _actuator_sp(3);}
+
+	if (!std::isnan(actuator_motors.control[0])) thrust_commands.thrust_command[0] = _actuator_sp(0);	
+	if (!std::isnan(actuator_motors.control[1])) thrust_commands.thrust_command[1] = _actuator_sp(1);	
+	if (!std::isnan(actuator_motors.control[2])) thrust_commands.thrust_command[2] = _actuator_sp(2);	
+	if (!std::isnan(actuator_motors.control[3])) thrust_commands.thrust_command[3] = _actuator_sp(3);	
+
 
 	actuator_motors.control[0] = force_to_pwm_scale_0;
 	actuator_motors.control[1] = force_to_pwm_scale_1;

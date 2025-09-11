@@ -278,7 +278,7 @@ void MulticopterPositionControl::parameters_update(bool force)
 	_control.setVelocityLimits(_param_mpc_xy_vel_max.get(),
 							   _param_mpc_z_vel_max_up.get(),
 							   _param_mpc_z_vel_max_dn.get());
-	
+
 	_control.setAccelerationLimits(_param_mpc_xy_acc_max.get(),
 								   _param_mpc_z_acc_max_up.get());
 

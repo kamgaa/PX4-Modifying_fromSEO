@@ -225,7 +225,7 @@ private:
 	float _lim_thr_max{}; ///< Maximum collective thrust allowed as output [-1,0] e.g. -0.1
 	float _lim_thr_xy_margin{}; ///< Margin to keep for horizontal control when saturating prioritized vertical thrust
 	float _lim_tilt{}; ///< Maximum tilt from level the output attitude is allowed to have
-	
+
 	float _lim_acc_horizontal{};
 	float _lim_acc_vertical{};
 
@@ -246,6 +246,6 @@ private:
 	matrix::Vector3f _thr_sp; /**< desired thrust */
 	float _yaw_sp{}; /**< desired heading */
 	float _yawspeed_sp{}; /** desired yaw-speed */
-	
+
 	matrix::Dcmf _w2b; /** world to body rotation matrix : custom **/
 };
