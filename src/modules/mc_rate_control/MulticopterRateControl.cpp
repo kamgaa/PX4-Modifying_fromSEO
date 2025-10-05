@@ -152,7 +152,12 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 
 		 const Vector3f rates{angular_velocity.xyz}; // ang vel sensor streaming
 		 const Vector3f angular_accel{angular_velocity.xyz_derivative}; // ang vel 미분
-
+		 vehicle_acceleration_s acc{};
+		 if (_vehicle_acceleration_sub.update(&acc)) {
+		 // acc.xyz 는 Body frame 기준 m/s^2 (EKF 설정에 따라 중력 제거/포함이 다를 수 있어, 로그로 확인 추천)
+		 _lin_accel_body = Vector3f{acc.xyz};
+		 _accel_ts_sample = acc.timestamp_sample;
+		 }
 		 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 		 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 		 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
@@ -358,16 +363,18 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 			 center_of_mass_update.timestamp = hrt_absolute_time();
 
 
+
 			 if(_custom_control_mode.custom_mode_flag){
 
-				dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update);
-
-			 }else{
+				if (_custom_control_mode.trajectory_flag) dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, true);
+				else dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, false);
+			 
+			}else{
 
 				 matrix::Vector3f desired_tau_PID_rpy_zero{0.f, 0.f, 0.f};
 				 Vector3f tau_rpy_tilde_zero{0.f, 0.f, 0.f};
 				 Vector3f _thrust_setpoint_zero{0.f, 0.f, 0.f};
-				dob_based_com_estimator(dt, desired_tau_PID_rpy_zero,tau_rpy_tilde_zero,center_of_mass_update);
+				dob_based_com_estimator(dt, desired_tau_PID_rpy_zero,tau_rpy_tilde_zero,center_of_mass_update, _lin_accel_body, false);
 			 }
 
 			 _center_of_mass_pub.publish(center_of_mass_update);

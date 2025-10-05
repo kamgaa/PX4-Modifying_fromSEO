@@ -37,29 +37,50 @@ matrix::Vector3f b_F_LPF;
 
 matrix::Vector3f com_hat_dot;
 
+
+
+
 // 파라미터
-float torque_dob_fc_est = 3.0f;   // [rad]
-float est_gamma         = 0.0001; // estimator gain
+float torque_dob_fc_est = 1.0f;   // [rad]
+float est_gamma         = 0.00002f; // estimator gain
+float est_gamma_z         = 0.001f; // estimator gain
 
 float Jxx_est = 0.15;
 float Jyy_est = 0.15;
 float Jzz_est = 0.20;
+static float mass = 7.0f;
+
+// // === [추가] 축별 변화율 제한(절대값, 단위: m/s) ===
+// float com_rate_lim_x = 1000000.0f;
+// float com_rate_lim_y = 1000000.0f;
+// float com_rate_lim_z = 1000000.0f;
+// // 내부 전용 유틸
+// void saturate_vector3_by_limits(matrix::Vector3f &v,
+//                                 float lim_x, float lim_y, float lim_z)
+// {
+//     v(0) = math::constrain(v(0), -lim_x, lim_x);
+//     v(1) = math::constrain(v(1), -lim_y, lim_y);
+//     v(2) = math::constrain(v(2), -lim_z, lim_z);
+// }
+
 
 // 내부 전용 유틸
 void constrain_vector3_components(matrix::Vector3f &v)
 {
-    v(0) = math::constrain(v(0), -0.04f, 0.04f);
-    v(1) = math::constrain(v(1), -0.04f, 0.04f);
-    v(2) = math::constrain(v(2), -0.02f, 0.0f);
+    v(0) = math::constrain(v(0), -0.03f, 0.03f);
+    v(1) = math::constrain(v(1), -0.03f, 0.03f);
+    v(2) = math::constrain(v(2), -0.02f, 0.02f);
 }
 
 } // namespace
 
 
-void dob_based_com_estimator(float dt, matrix::Vector3f torque_dhat, matrix::Vector3f body_force_desired, center_of_mass_s &com_log)
+void dob_based_com_estimator(float dt, matrix::Vector3f torque_dhat, matrix::Vector3f body_force_desired, center_of_mass_s &com_log, const matrix::Vector3f &lin_accel_body, bool z_estimation_flag)
 {
     const float root2 = 1.41421356f;
     const float fc2 = torque_dob_fc_est * torque_dob_fc_est;
+
+    body_force_desired = mass * lin_accel_body;    // 힘 말고 가속도 쓸거면 이거 해라
 
 
     //========================[1] Q-Filter Definition (Same for all axes)========================//
@@ -116,10 +137,10 @@ void dob_based_com_estimator(float dt, matrix::Vector3f torque_dhat, matrix::Vec
     com_hat_dot = A.transpose() * torque_dhat;
 
 
-
-    com_update(0) += (est_gamma * com_hat_dot(0)) * dt;
-    com_update(1) += (est_gamma * com_hat_dot(1)) * dt;
-    com_update(2) += (est_gamma * com_hat_dot(2)) * dt;
+    // === 적분 ===
+    com_update(0) += (est_gamma   * com_hat_dot(0)) * dt;
+    com_update(1) += (est_gamma   * com_hat_dot(1)) * dt;
+    if (z_estimation_flag) com_update(2) += (est_gamma_z * com_hat_dot(2)) * dt;
 
 
 

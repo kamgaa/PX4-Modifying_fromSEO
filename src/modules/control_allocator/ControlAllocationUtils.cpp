@@ -1,5 +1,5 @@
 #include "ControlAllocationUtils.hpp"
-#include <math.h> 
+#include <math.h>
 float force_to_pwm_scale(float force)
 {
 	float a = 2.0962e-05f;
@@ -23,5 +23,5 @@ float force_to_pwm_scale(float force)
     }
 
     return pwm_scaled;
-    
+
 }

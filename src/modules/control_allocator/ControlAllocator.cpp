@@ -176,7 +176,7 @@ ControlAllocator::Run()
 
 		xc = com_update.com_update[0];
 		yc = com_update.com_update[1]; //-0.04f
-		zc = 0;//com_update.com_update[2];
+		zc = com_update.com_update[2];
 
 	}
 
@@ -244,7 +244,7 @@ ControlAllocator::Run()
 			_last_run = now;
 
 			update_effectiveness_matrix_if_needed();
-			
+
 	}
 
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
@@ -275,9 +275,9 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	// Assign control effectiveness matrix
 	float xi = 0.01;	// so called b-over-k
 	float r2 = sqrt(2);
-	float r_arm = 0.21;
-	float l_servo = 0.02;
-	bool allocation_version_1 = true;
+	float r_arm = 0.23; // 0.21 [0923]
+	float l_servo = -0.01; // 0.098 [default].
+	bool allocation_version_1 = false;
 	/*
 	float th1 = 0.0; //rad
 	float th2 = 0.0; //rad
@@ -302,7 +302,7 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	{
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// ------------------------------------------------- [Version. 1] ------------------------------------------------- //
-		// ----------------------------------- Com bias로 인한 yaw torque 보상을 여기서 수행  ---------------------------------- // 
+		// ----------------------------------- Com bias로 인한 yaw torque 보상을 여기서 수행  ---------------------------------- //
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		// 1x1
@@ -343,7 +343,7 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	{
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// ------------------------------------------------- [Version. 2] ------------------------------------------------- //
-		// ---------------------------------- Com bias로 인한 yaw torque 보상을 servo에서 수행  -------------------------------- // 
+		// ---------------------------------- Com bias로 인한 yaw torque 보상을 servo에서 수행  -------------------------------- //
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		// 1x1
@@ -388,8 +388,8 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	_actuator_sp = _mix * (_control_sp);
 
 	for(int i = 0; i<4; ++i){
-		if(_actuator_sp(i) > 55.0f){_actuator_sp(i) = 55.0f;}
-		if(_actuator_sp(i) < 1.5f){_actuator_sp(i) = 1.5f;}
+		// if(_actuator_sp(i) > 55.0f){_actuator_sp(i) = 55.0f;}
+		if(_actuator_sp(i) < 0.5f){_actuator_sp(i) = 0.5f;}
 	}
 
 
@@ -430,10 +430,10 @@ ControlAllocator::publish_actuator_controls()
 	// if(actuator_motors.control[2] != NAN){thrust_commands.thrust_command[2] = _actuator_sp(2);}
 	// if(actuator_motors.control[3] != NAN){thrust_commands.thrust_command[3] = _actuator_sp(3);}
 
-	if (!std::isnan(actuator_motors.control[0])) thrust_commands.thrust_command[0] = _actuator_sp(0);	
-	if (!std::isnan(actuator_motors.control[1])) thrust_commands.thrust_command[1] = _actuator_sp(1);	
-	if (!std::isnan(actuator_motors.control[2])) thrust_commands.thrust_command[2] = _actuator_sp(2);	
-	if (!std::isnan(actuator_motors.control[3])) thrust_commands.thrust_command[3] = _actuator_sp(3);	
+	if (!std::isnan(actuator_motors.control[0])) thrust_commands.thrust_command[0] = _actuator_sp(0);
+	if (!std::isnan(actuator_motors.control[1])) thrust_commands.thrust_command[1] = _actuator_sp(1);
+	if (!std::isnan(actuator_motors.control[2])) thrust_commands.thrust_command[2] = _actuator_sp(2);
+	if (!std::isnan(actuator_motors.control[3])) thrust_commands.thrust_command[3] = _actuator_sp(3);
 
 
 	actuator_motors.control[0] = force_to_pwm_scale_0;

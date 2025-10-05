@@ -60,7 +60,7 @@
  #include <uORB/topics/vehicle_status.h>
  #include <uORB/topics/vehicle_thrust_setpoint.h>
  #include <uORB/topics/vehicle_torque_setpoint.h>
-
+#include <uORB/topics/vehicle_acceleration.h>
  #include <uORB/topics/custom_control_mode.h> // custom
  #include <uORB/topics/center_of_mass.h> // custom
  #include <uORB/topics/torque_dhat.h> //custom
@@ -149,6 +149,7 @@
 	 uORB::Subscription _vehicle_rates_setpoint_sub{ORB_ID(vehicle_rates_setpoint)};
 	 uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	 uORB::Subscription _custom_control_mode_sub{ORB_ID(custom_control_mode)}; // custom
+    	 uORB::Subscription _vehicle_acceleration_sub{ORB_ID(vehicle_acceleration)};
 
 	 uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
 
@@ -162,6 +163,7 @@
 	 uORB::Publication<center_of_mass_s>	_center_of_mass_pub{ORB_ID(center_of_mass)}; // custom
 	 uORB::Publication<torque_dhat_s>	_torque_dhat_pub{ORB_ID(torque_dhat)}; // custom
 
+
 	 center_of_mass_s center_of_mass_update{}; //custom
 	 custom_control_mode_s _custom_control_mode{}; // custom
 	 torque_dhat_s _torque_dhat{}; //custom
@@ -173,6 +175,10 @@
 	 bool _maybe_landed{true};
 
 	 hrt_abstime _last_run{0};
+
+	 matrix::Vector3f   _lin_accel_body{0.f, 0.f, 0.f};   // 최신 가속도 저장(Body frame)
+	 hrt_abstime        _accel_ts_sample{0};
+
 
 	 perf_counter_t	_loop_perf;			/**< loop duration performance counter */
 
