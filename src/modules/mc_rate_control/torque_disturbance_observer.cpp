@@ -46,7 +46,7 @@ matrix::Matrix<float, 2,1>  Q_T_Z_x_dot;
 matrix::Matrix<float, 1,1>  Q_T_Z_y;
 
 // ============ 파라미터/상태 ============ //
-float torque_dob_fc = 1.0f; // radian임.!!     6rad = 1 hz임
+float torque_dob_fc = 0.5f; // radian임.!!     6rad = 1 hz임
 float dhat_tau_r = 0.f;
 float dhat_tau_p = 0.f;
 float dhat_tau_y = 0.f;
@@ -54,9 +54,9 @@ float dhat_tau_y = 0.f;
 float root2 = sqrtf(2.0f); // damping factor = 0.707
 
 // 관성 추정값
-float Jxx = 0.15f; //
-float Jyy = 0.15f;
-float Jzz = 0.20f;
+float Jxx = 0.24f; //
+float Jyy = 0.27f;
+float Jzz = 0.45f;
 
 // ============ 내부 유틸 ============ //
 float constrain_with_sign(float value, float limit = 10.0f)
@@ -81,7 +81,6 @@ float constrain_with_sign(float value, float limit = 10.0f)
 void torque_DOB(float dt, matrix::Vector3f tau_rpy_desired, matrix::Vector3f imu_omega, matrix::Vector3f &tau_rpy_tilde, torque_dhat_s &torque_dhat, bool compensate_flag)
 {
 
-  // Desired torque inputs
 
   float tau_r=tau_rpy_desired(0);
   float tau_p=tau_rpy_desired(1);

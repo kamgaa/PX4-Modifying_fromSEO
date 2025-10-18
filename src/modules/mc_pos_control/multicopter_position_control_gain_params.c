@@ -37,7 +37,7 @@
  * Defined as corrective velocity in m/s per m position error
  *
  * @min 0.1
- * @max 1.5
+ * @max 5.0
  * @decimal 4
  * @increment 0.1
  * @group Multicopter Position Control

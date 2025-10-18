@@ -96,7 +96,7 @@ PARAM_DEFINE_FLOAT(MC_PITCH_D, 0.05f); // 0.1
  * Yaw proportional gain, i.e. desired angular speed in rad/s for error 1 rad.
  *
  * @min 0.0
- * @max 5
+ * @max 10
  * @decimal 2
  * @increment 0.1
  * @group Multicopter Attitude Control

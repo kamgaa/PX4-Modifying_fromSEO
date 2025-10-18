@@ -384,8 +384,8 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ Yaw trimming Logic (Butterworth + dt Moving Average) ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 			// RT(고역) + TVC(저역) 분리: Butterworth(2차) 유지, fs = 1/dt 대신 이동평균(dt) 기반
-			constexpr float kYawSplitFc_Hz = 0.4f;   // TVC 저역 컷오프 [Hz]
-			constexpr float kYawRtMax_Nm   = 0.5f;   // RT 권한 한계 [Nm]
+			constexpr float kYawSplitFc_Hz = 0.8f;   // TVC 저역 컷오프 [Hz]
+			constexpr float kYawRtMax_Nm   = 1.0f;   // RT 권한 한계 [Nm]
 			constexpr float kMinFs_Hz      = 50.f;   // 보호용 최소 fs
 			constexpr float kMaxFs_Hz      = 2000.f; // 보호용 최대 fs
 			constexpr float kFsUpdateFrac  = 0.25f;  // Butter 계수 갱신 임계(비율)
@@ -468,6 +468,9 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 				vehicle_torque_setpoint.yaw_trim = tau_z_t;  // TVC(저역 + RT 포화 초과분)
 			}
 
+			 // SUHG 1005. Feed Forward for PD
+			//  vehicle_torque_setpoint.xyz[0] += 0.7f;
+			//  vehicle_torque_setpoint.xyz[1] += 0.7f;
 
 
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //

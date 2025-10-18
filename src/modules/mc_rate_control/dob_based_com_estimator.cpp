@@ -41,14 +41,14 @@ matrix::Vector3f com_hat_dot;
 
 
 // 파라미터
-float torque_dob_fc_est = 1.0f;   // [rad]
-float est_gamma         = 0.00002f; // estimator gain
-float est_gamma_z         = 0.001f; // estimator gain
+float torque_dob_fc_est = 0.5f;   // [rad]
+float est_gamma         = 0.00001f; // estimator gain
+float est_gamma_z         = 0.0012f; // estimator gain
 
-float Jxx_est = 0.15;
-float Jyy_est = 0.15;
-float Jzz_est = 0.20;
-static float mass = 7.0f;
+float Jxx_est = 0.24;
+float Jyy_est = 0.27;
+float Jzz_est = 0.45;
+static float mass = 8.0f;
 
 // // === [추가] 축별 변화율 제한(절대값, 단위: m/s) ===
 // float com_rate_lim_x = 1000000.0f;
@@ -67,9 +67,9 @@ static float mass = 7.0f;
 // 내부 전용 유틸
 void constrain_vector3_components(matrix::Vector3f &v)
 {
-    v(0) = math::constrain(v(0), -0.03f, 0.03f);
-    v(1) = math::constrain(v(1), -0.03f, 0.03f);
-    v(2) = math::constrain(v(2), -0.02f, 0.02f);
+    v(0) = math::constrain(v(0), -1.0f, 1.0f);
+    v(1) = math::constrain(v(1), -1.0f, 1.0f);
+    v(2) = math::constrain(v(2), -1.0f, 1.0f);
 }
 
 } // namespace
@@ -77,6 +77,7 @@ void constrain_vector3_components(matrix::Vector3f &v)
 
 void dob_based_com_estimator(float dt, matrix::Vector3f torque_dhat, matrix::Vector3f body_force_desired, center_of_mass_s &com_log, const matrix::Vector3f &lin_accel_body, bool z_estimation_flag)
 {
+
     const float root2 = 1.41421356f;
     const float fc2 = torque_dob_fc_est * torque_dob_fc_est;
 
