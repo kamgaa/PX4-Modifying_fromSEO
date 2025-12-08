@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "/home/seosuk/Downloads/PX4-Autopilot/src/drivers/lights"
+    "cmake.sourceDirectory": "/home/seosuk/Downloads/PX4-Autopilot/src/drivers/lights",
+    "files.associations": {
+        "random": "cpp"
+    }
 }
