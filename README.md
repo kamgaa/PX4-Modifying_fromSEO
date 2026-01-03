@@ -1,3 +1,31 @@
+# Research Extension: Palletrone – Fully Actuated mUAV
+> Mobile Robotics Lab (MRL),
+Seoul National University of Science and Technology (Seoultech)
+> 
+
+> **Note**  
+> This repository is based on a PX4 Autopilot snapshot obtained on **February 7, 2025**.  
+> To ensure experimental reproducibility and consistency with the submitted manuscript, this codebase intentionally remains aligned with that version, despite subsequent upstream PX4 updates.
+
+This repository extends **PX4 Autopilot** to support research on **fully actuated multirotor aerial robots**, conducted at the **Mobile Robotics Lab (MRL), Seoultech**.
+
+It focuses on the **Palletrone**, a fully actuated micro-UAV platform, and integrates **MOCE 2.0 (Model-Based Online Center of Mass Estimation)** for real-time control and estimation.
+
+### Key Modifications
+
+- **MOCE 2.0**: Model-Based Online Center of Mass Estimation for fully actuated mUAVs
+- **Control Allocation**: 4 thrusters + 4 servos (fully actuated configuration)
+- **Control Architecture**: Cascade Position–Attitude Control framework
+- **Additional Controllers**:
+    - Disturbance Observer (DOB)
+    - Online CoM Estimation (MOCE 2.0)
+
+### Project Status
+
+- **Manuscript Status**: *RA-L (Robotics and Automation Letters) — Under Review*
+- **Experimental Video**: https://youtu.be/gVHEpCb9g2o
+
+
 # PX4 Drone Autopilot
 
 [![Releases](https://img.shields.io/github/release/PX4/PX4-Autopilot.svg)](https://github.com/PX4/PX4-Autopilot/releases) [![DOI](https://zenodo.org/badge/22634/PX4/PX4-Autopilot.svg)](https://zenodo.org/badge/latestdoi/22634/PX4/PX4-Autopilot)
