@@ -428,7 +428,7 @@ void MulticopterPositionControl::Run()
 
 	}
 
-	// FROM ROS SEUK
+	// FROM ROS SEUK. position command
 	if (_custom_command_position_mode_sub.update(&_custom_command_position_mode)) {
 
 		custom_command_position(0) = _custom_command_position_mode.setpoint[0];
@@ -437,8 +437,6 @@ void MulticopterPositionControl::Run()
 		custom_command_position(3) = _custom_command_position_mode.setpoint[3];
 
 	}
-
-
 
 
 	// if((double)manual_setpoint(2) > 0.0){manual_setpoint(2) = 0.0;}
@@ -547,11 +545,6 @@ void MulticopterPositionControl::Run()
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
-
-
-
-
-
 	// update vehicle constraints and handle smooth takeoff
 	_vehicle_constraints_sub.update(&_vehicle_constraints);
 
@@ -560,7 +553,24 @@ void MulticopterPositionControl::Run()
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 
 
-	_control.setInputSetpoint(pose_setpoint); // 여기가 translational desired value input point! (position, velocity, acceleration)
+	_control.setInputSetpoint(pose_setpoint); // 여기가 translational desired position!
+
+	// FROM ROS SEUK. velocity command (feed forward)
+	if (_custom_command_velocity_mode_sub.update(&_custom_command_velocity_mode)) {
+
+		custom_command_velocity(0) = _custom_command_velocity_mode.setpoint[0];
+		custom_command_velocity(1) = _custom_command_velocity_mode.setpoint[1];
+		custom_command_velocity(2) = _custom_command_velocity_mode.setpoint[2];
+		custom_command_velocity(3) = _custom_command_velocity_mode.setpoint[3];
+
+	}
+	// disarmed면 ff velocity -> 0
+	if (!_vehicle_control_mode.flag_armed) {
+	custom_command_velocity.zero();
+	}
+
+	// PositionControl.cpp로 전달
+	_control.setVelocityFeedforward(custom_command_velocity);
 
 
 	_control.setState(_states); // translational actual value setting (position, velocity, acceleration)

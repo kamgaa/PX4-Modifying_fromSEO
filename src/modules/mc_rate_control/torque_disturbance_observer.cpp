@@ -46,7 +46,7 @@ matrix::Matrix<float, 2,1>  Q_T_Z_x_dot;
 matrix::Matrix<float, 1,1>  Q_T_Z_y;
 
 // ============ 파라미터/상태 ============ //
-float torque_dob_fc = 0.5f; // radian임.!!     6rad = 1 hz임
+float torque_dob_fc = 1.5f; // radian임.!!     6rad = 1 hz임
 float dhat_tau_r = 0.f;
 float dhat_tau_p = 0.f;
 float dhat_tau_y = 0.f;

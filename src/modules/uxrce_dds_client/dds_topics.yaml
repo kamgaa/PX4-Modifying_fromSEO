@@ -126,6 +126,9 @@ subscriptions:
   - topic: /fmu/in/custom_command_position_mode  # SU
     type: px4_msgs::msg::CustomCommandPositionMode
 
+  - topic: /fmu/in/custom_command_velocity_mode  # SU
+    type: px4_msgs::msg::CustomCommandVelocityMode
+
   - topic: /fmu/in/servo_angle
     type: px4_msgs::msg::ServoAngle
 

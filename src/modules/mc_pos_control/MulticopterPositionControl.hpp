@@ -72,6 +72,7 @@
 #include <uORB/topics/manual_control_setpoint.h> // custom
 #include <uORB/topics/custom_control_mode.h> // custom
 #include <uORB/topics/custom_command_position_mode.h> // custom
+#include <uORB/topics/custom_command_velocity_mode.h> // custom
 
 
 using namespace time_literals;
@@ -117,7 +118,7 @@ private:
 	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
 	uORB::Subscription _custom_control_mode_sub{ORB_ID(custom_control_mode)}; // custom
 	uORB::Subscription _custom_command_position_mode_sub{ORB_ID(custom_command_position_mode)}; // custom
-
+	uORB::Subscription _custom_command_velocity_mode_sub{ORB_ID(custom_command_velocity_mode)}; // custom
 
 	hrt_abstime _time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 	hrt_abstime _time_position_control_enabled{0};
@@ -126,6 +127,7 @@ private:
 
 	custom_control_mode_s _custom_control_mode{}; // custom
 	custom_command_position_mode_s _custom_command_position_mode{}; // custom
+	custom_command_velocity_mode_s _custom_command_velocity_mode{}; // custom
 
 	vehicle_constraints_s _vehicle_constraints {
 		.timestamp = 0,
@@ -233,11 +235,14 @@ private:
 
 	matrix::Vector3f gain_check;
 	matrix::Vector4f pose_setpoint{0.f, 0.f, 0.f, 0.f};
+
+
 	float pose_z_setpoint = 0.f;
 
 	matrix::Vector4f base_setpoint{0.f, 0.f, 0.f, 0.f};
 	matrix::Vector4f manual_setpoint{0.f, 0.f, 0.f, 0.0f};
-	matrix::Vector4f custom_command_position{0.f, 0.f, 0.f, 0.0f}; // SEUK
+	matrix::Vector4f custom_command_position{0.f, 0.f, 0.f, 0.0f}; // SEUK, world
+	matrix::Vector4f custom_command_velocity{0.f, 0.f, 0.f, 0.f}; // SEUK, world
 
 	float roll  = 0.f;
 	float pitch = 0.f;

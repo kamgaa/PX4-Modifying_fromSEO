@@ -152,6 +152,7 @@ public:
 	 * @param setpoint setpoints including feed-forwards to execute in update()
 	 */
 	 void setInputSetpoint(const matrix::Vector4f &pose_setpoint);
+	 void setVelocityFeedforward(const matrix::Vector4f &vel_ff);
 
 	/**
 	 * Apply P-position and PID-velocity controller that updates the member
@@ -182,7 +183,6 @@ public:
 	 * @param local_position_setpoint reference to struct to fill up
 	 */
 	void getLocalPositionSetpoint(vehicle_local_position_setpoint_s &local_position_setpoint) const;
-
 	/**
 	 * Get the controllers output attitude setpoint
 	 * This attitude setpoint was generated from the resulting acceleration setpoint after position and velocity control.
@@ -248,4 +248,6 @@ private:
 	float _yawspeed_sp{}; /** desired yaw-speed */
 
 	matrix::Dcmf _w2b; /** world to body rotation matrix : custom **/
+
+	matrix::Vector4f _vel_ff{0.f, 0.f, 0.f, 0.f};  // world-frame velocity feedforward [vx, vy, vz, yawrate]
 };
