@@ -42,13 +42,13 @@ matrix::Vector3f com_hat_dot;
 
 // 파라미터
 float torque_dob_fc_est = 1.5f;   // [rad]
-float est_gamma         = 0.000f; // estimator gain
+float est_gamma         = 0.00001f; // estimator gain
 float est_gamma_z         = 0.0012f; // estimator gain
 
 float Jxx_est = 0.24;
 float Jyy_est = 0.27;
 float Jzz_est = 0.45;
-// static float mass = 8.0f;
+static float mass = 8.0f;
 
 // // === [추가] 축별 변화율 제한(절대값, 단위: m/s) ===
 // float com_rate_lim_x = 1000000.0f;
@@ -81,7 +81,7 @@ void dob_based_com_estimator(float dt, matrix::Vector3f torque_dhat, matrix::Vec
     const float root2 = 1.41421356f;
     const float fc2 = torque_dob_fc_est * torque_dob_fc_est;
 
-    // body_force_desired = mass * lin_accel_body;    // 힘 말고 가속도 쓸거면 이거 해라. 그냥 힘쓸거면 주석쳐라
+    body_force_desired = mass * lin_accel_body;    // 힘 말고 가속도 쓸거면 이거 해라. 그냥 힘쓸거면 주석쳐라
 
     //========================[1] Q-Filter Definition (Same for all axes)========================//
     Q_T_A_est(0,0) = -root2 * torque_dob_fc_est; Q_T_A_est(0,1) = -fc2;
