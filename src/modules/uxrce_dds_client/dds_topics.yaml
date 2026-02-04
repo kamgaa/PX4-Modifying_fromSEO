@@ -116,6 +116,9 @@ publications:
   - topic: /fmu/out/custom_dt   # Custom
     type: px4_msgs::msg::CustomDt
 
+  - topic: /fmu/out/l1_adaptive_status
+    type: px4_msgs::msg::L1AdaptiveStatus
+
 # Create uORB::Publication
 subscriptions:
 

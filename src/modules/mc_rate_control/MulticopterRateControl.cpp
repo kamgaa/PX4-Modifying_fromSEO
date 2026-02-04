@@ -41,6 +41,7 @@
 
  #include <uORB/Publication.hpp>
  #include <uORB/topics/custom_dt.h>
+ #include "l1_adaptive_controller.hpp"
 
  using namespace matrix;
  using namespace time_literals;
@@ -342,11 +343,43 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 			 }
 			 else
 			 {
-				 torque_DOB(dt, desired_tau_PID_rpy, rates, tau_rpy_tilde, _torque_dhat, false);
+				torque_DOB(dt, desired_tau_PID_rpy, rates, tau_rpy_tilde, _torque_dhat, false);
 
-				 vehicle_torque_setpoint.xyz[0] = desired_tau_PID_rpy(0);
-				 vehicle_torque_setpoint.xyz[1] = desired_tau_PID_rpy(1);
-				 vehicle_torque_setpoint.xyz[2] = desired_tau_PID_rpy(2);
+					if(_custom_control_mode.l1_adaptive_flag)
+					{
+
+						l1_adaptive_controller(dt, desired_tau_PID_rpy, rates, _lin_accel_body, l1_tau_tilde, l1_dhat_tau, l1_tau_comp_raw, l1_tau_comp_lpf);
+
+						// torque command
+						vehicle_torque_setpoint.xyz[0] = l1_tau_tilde(0);
+						vehicle_torque_setpoint.xyz[1] = l1_tau_tilde(1);
+						vehicle_torque_setpoint.xyz[2] = l1_tau_tilde(2);
+
+						// ================= publish L1AdaptiveStatus =================
+						l1_adaptive_status_s l1_status{};
+
+						l1_status.timestamp        = hrt_absolute_time();
+
+						l1_status.dhat_tau[0] = l1_dhat_tau(0);
+						l1_status.dhat_tau[1] = l1_dhat_tau(1);
+						l1_status.dhat_tau[2] = l1_dhat_tau(2);
+
+						l1_status.tau_comp_raw[0] = l1_tau_comp_raw(0);
+						l1_status.tau_comp_raw[1] = l1_tau_comp_raw(1);
+						l1_status.tau_comp_raw[2] = l1_tau_comp_raw(2);
+
+						l1_status.tau_comp_lpf[0] = l1_tau_comp_lpf(0);
+						l1_status.tau_comp_lpf[1] = l1_tau_comp_lpf(1);
+						l1_status.tau_comp_lpf[2] = l1_tau_comp_lpf(2);
+
+						_l1_adaptive_status_pub.publish(l1_status);
+					}
+					else
+					{
+						vehicle_torque_setpoint.xyz[0] = desired_tau_PID_rpy(0);
+						vehicle_torque_setpoint.xyz[1] = desired_tau_PID_rpy(1);
+						vehicle_torque_setpoint.xyz[2] = desired_tau_PID_rpy(2);
+					}
 
 			 }
 
@@ -368,7 +401,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 
 				if (_custom_control_mode.trajectory_flag) dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, true);
 				else dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, false);
-			 
+
 			}else{
 
 				 matrix::Vector3f desired_tau_PID_rpy_zero{0.f, 0.f, 0.f};

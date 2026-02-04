@@ -52,7 +52,7 @@ set(msg_files
 	CustomDt.msg
 	CenterOfMass.msg
 	TorqueDhat.msg
-
+	L1AdaptiveStatus.msg
 	ActionRequest.msg
 	ActuatorArmed.msg
 	ActuatorControlsStatus.msg
