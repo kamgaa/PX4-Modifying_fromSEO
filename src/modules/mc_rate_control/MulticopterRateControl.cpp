@@ -355,24 +355,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 						vehicle_torque_setpoint.xyz[1] = l1_tau_tilde(1);
 						vehicle_torque_setpoint.xyz[2] = l1_tau_tilde(2);
 
-						// ================= publish L1AdaptiveStatus =================
-						l1_adaptive_status_s l1_status{};
 
-						l1_status.timestamp        = hrt_absolute_time();
-
-						l1_status.dhat_tau[0] = l1_dhat_tau(0);
-						l1_status.dhat_tau[1] = l1_dhat_tau(1);
-						l1_status.dhat_tau[2] = l1_dhat_tau(2);
-
-						l1_status.tau_comp_raw[0] = l1_tau_comp_raw(0);
-						l1_status.tau_comp_raw[1] = l1_tau_comp_raw(1);
-						l1_status.tau_comp_raw[2] = l1_tau_comp_raw(2);
-
-						l1_status.tau_comp_lpf[0] = l1_tau_comp_lpf(0);
-						l1_status.tau_comp_lpf[1] = l1_tau_comp_lpf(1);
-						l1_status.tau_comp_lpf[2] = l1_tau_comp_lpf(2);
-
-						_l1_adaptive_status_pub.publish(l1_status);
 					}
 					else
 					{
@@ -382,6 +365,26 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 					}
 
 			 }
+
+
+			// ================= publish L1AdaptiveStatus =================
+			l1_adaptive_status_s l1_status{};
+
+			l1_status.timestamp        = hrt_absolute_time();
+
+			l1_status.dhat_tau[0] = l1_dhat_tau(0);
+			l1_status.dhat_tau[1] = l1_dhat_tau(1);
+			l1_status.dhat_tau[2] = l1_dhat_tau(2);
+
+			l1_status.tau_comp_raw[0] = l1_tau_comp_raw(0);
+			l1_status.tau_comp_raw[1] = l1_tau_comp_raw(1);
+			l1_status.tau_comp_raw[2] = l1_tau_comp_raw(2);
+
+			l1_status.tau_comp_lpf[0] = l1_tau_comp_lpf(0);
+			l1_status.tau_comp_lpf[1] = l1_tau_comp_lpf(1);
+			l1_status.tau_comp_lpf[2] = l1_tau_comp_lpf(2);
+
+			_l1_adaptive_status_pub.publish(l1_status);
 
 			 Vector3f dhat_vec(_torque_dhat.xyz[0],
 					 _torque_dhat.xyz[1],

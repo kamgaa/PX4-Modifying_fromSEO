@@ -9,13 +9,13 @@ namespace {
 
 // ===================== Tunables (match your diagram) ===================== //
 // Q ≈ 20 Hz  -> wc = 2π*20 rad/s
-static float l1_q_fc = 2.0f * M_PI_F * 20.0f;   // rad/s
+static float l1_q_fc = 90;   // rad/s
 
 // gamma ≈ 0.1
-static float l1_gamma = 0.1f;
+static float l1_gamma = 0.5f;
 
 // omega_LPF ≈ 0.01 rad/s  (1st-order LPF for final torque compensation)
-static float l1_omega_lpf = 0.01f;              // rad/s
+static float l1_omega_lpf = 0.0005f;              // rad/s
 
 // inertia estimate (diagonal) (same as your DOB/CoM)
 static float Jxx = 0.24f;
@@ -26,9 +26,9 @@ static float Jzz = 0.45f;
 static float mass = 8.0f;
 
 // safety clamps (keep conservative)
-static constexpr float kMaxAbsDhatTau = 10.0f;  // Nm
-static constexpr float kMaxAbsCom     = 1.0f;   // m (same clamp style as your estimator)
-static constexpr float kMaxAbsTauComp = 10.0f;  // Nm
+static constexpr float kMaxAbsDhatTau = 40.0f;  // Nm
+static constexpr float kMaxAbsCom     = 4.0f;   // m (same clamp style as your estimator)
+static constexpr float kMaxAbsTauComp = 40.0f;  // Nm
 
 static const float root2 = 1.41421356f;
 
