@@ -403,7 +403,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 			 if(_custom_control_mode.custom_mode_flag){
 
 				if (_custom_control_mode.trajectory_flag) dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, true);
-				else dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, false);
+				else dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, true);
 
 			}else{
 
