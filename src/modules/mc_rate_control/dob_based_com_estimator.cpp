@@ -39,10 +39,11 @@ matrix::Vector3f com_hat_dot;
 
 
 
+
 // 파라미터
 float torque_dob_fc_est = 1.5f;   // [rad]
-float est_gamma         = 0.00001f; // estimator gain
-float est_gamma_z         = 0.00005f; // estimator gain
+float est_gamma   = 3.2e-6f;   // x,y
+float est_gamma_z = 3.2e-6f;   // z
 
 float Jxx_est = 0.0768;
 float Jyy_est = 0.0871;
