@@ -56,7 +56,7 @@ float root2 = sqrtf(2.0f); // damping factor = 0.707
 // 관성 추정값
 float Jxx = 0.0768f; //
 float Jyy = 0.0871f;
-float Jzz = 0.0113f;
+float Jzz = 0.113f;
 
 // ============ 내부 유틸 ============ //
 float constrain_with_sign(float value, float limit = 10.0f)

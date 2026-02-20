@@ -9,22 +9,21 @@ namespace {
 
 // ===================== Tunables (match your diagram) ===================== //
 // Q ≈ 20 Hz  -> wc = 2π*20 rad/s
-static float l1_q_fc = 90;   // rad/s
+static float l1_q_fc = 150;   // rad/s
 
 // gamma ≈ 0.1
-static float l1_gamma = 0.5;
-
+static float l1_gamma = 1e-2f;
 // omega_LPF ≈ 0.01 rad/s  (1st-order LPF for final torque compensation)
-static float l1_omega_lpf = 0.0005f;              // rad/s
+static float l1_omega_lpf = 0.1f;              // rad/s
 
 // inertia estimate (diagonal) (same as your DOB/CoM)
 // static float Jxx = 0.0768f;
 // static float Jyy = 0.0871f;
 // static float Jzz = 0.0113f;
 
-static float Jxx = 0.24f;
-static float Jyy = 0.27f;
-static float Jzz = 0.45f;
+static float Jxx = 0.0768f;
+static float Jyy = 0.0871f;
+static float Jzz = 0.113f;
 
 
 // mass used for F_raw = m * a_body

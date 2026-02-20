@@ -47,7 +47,7 @@ float est_gamma_z = 5.0e-5f;//8.5e-5f;   // z
 
 float Jxx_est = 0.0768;
 float Jyy_est = 0.0871;
-float Jzz_est = 0.0113;
+float Jzz_est = 0.113;
 // static float mass = 8.0f;
 
 // // === [추가] 축별 변화율 제한(절대값, 단위: m/s) ===
