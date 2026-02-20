@@ -273,7 +273,7 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	_control_sp(3) = _thrust_sp(2); // -22.0 : 음수여야함
 
 	// Assign control effectiveness matrix
-	float xi = 0.01;	// so called b-over-k
+	float xi = - 0.01;	// so called b-over-k
 	float r2 = sqrt(2);
 	float r_arm = 0.23; // 0.21 [0923]
 	float l_servo = 0.005; // -0.01; [260218]
