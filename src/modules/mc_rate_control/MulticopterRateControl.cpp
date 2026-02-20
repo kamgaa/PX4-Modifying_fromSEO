@@ -348,7 +348,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 					if(_custom_control_mode.l1_adaptive_flag)
 					{
 
-						l1_adaptive_controller(dt, desired_tau_PID_rpy, rates, _lin_accel_body, l1_tau_tilde, l1_dhat_tau, l1_tau_comp_raw, l1_tau_comp_lpf);
+						l1_adaptive_controller(dt, desired_tau_PID_rpy, rates, _lin_accel_body, l1_tau_tilde, l1_dhat_tau, l1_tau_comp_raw, l1_tau_comp_lpf, _thrust_setpoint);
 
 						// torque command
 						vehicle_torque_setpoint.xyz[0] = l1_tau_tilde(0);

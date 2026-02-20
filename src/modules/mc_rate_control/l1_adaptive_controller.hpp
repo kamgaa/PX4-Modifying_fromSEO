@@ -22,4 +22,5 @@ void l1_adaptive_controller(float dt,
                             matrix::Vector3f &tau_tilde_rpy,
                             matrix::Vector3f &dhat_tau_out,
                             matrix::Vector3f &tau_comp_raw_out,
-                            matrix::Vector3f &tau_comp_lpf_out);
+                            matrix::Vector3f &tau_comp_lpf_out,
+                            matrix::Vector3f body_force_desired);

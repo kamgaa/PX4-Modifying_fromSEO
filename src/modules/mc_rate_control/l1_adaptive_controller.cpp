@@ -12,18 +12,23 @@ namespace {
 static float l1_q_fc = 90;   // rad/s
 
 // gamma ≈ 0.1
-static float l1_gamma = 0.5f;
+static float l1_gamma = 0.5;
 
 // omega_LPF ≈ 0.01 rad/s  (1st-order LPF for final torque compensation)
 static float l1_omega_lpf = 0.0005f;              // rad/s
 
 // inertia estimate (diagonal) (same as your DOB/CoM)
+// static float Jxx = 0.0768f;
+// static float Jyy = 0.0871f;
+// static float Jzz = 0.0113f;
+
 static float Jxx = 0.24f;
 static float Jyy = 0.27f;
 static float Jzz = 0.45f;
 
+
 // mass used for F_raw = m * a_body
-static float mass = 8.0f;
+// static float mass = 8.0f;
 
 // safety clamps (keep conservative)
 static constexpr float kMaxAbsDhatTau = 40.0f;  // Nm
@@ -152,7 +157,8 @@ void l1_adaptive_controller(float dt,
                             Vector3f &tau_tilde_rpy,
                             Vector3f &dhat_tau_out,
                             Vector3f &tau_comp_raw_out,
-                            Vector3f &tau_comp_lpf_out)
+                            Vector3f &tau_comp_lpf_out,
+			    matrix::Vector3f body_force_desired)
 {
 	const float dtg = (dt > 0.f) ? math::constrain(dt, 1.25e-4f, 2.0e-2f) : 1.0e-3f;
 
@@ -264,7 +270,7 @@ void l1_adaptive_controller(float dt,
 	// =================================================================================
 	// [2] Force from acceleration + Q-filtered force
 	// =================================================================================
-	const Vector3f F_raw = mass * a_b;
+	const Vector3f F_raw = body_force_desired;
 
 	Vector3f F_q;
 	F_q(0) = Q_Fx.step(F_raw(0), dtg);

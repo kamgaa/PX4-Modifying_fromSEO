@@ -7,7 +7,7 @@
 namespace {
 
 // 천천히 수렴하는 필터 상태
-matrix::Vector3f com_update{};     // 제어기로 들어가는 최종 값
+matrix::Vector3f com_update{};
 matrix::Vector3f com_update_lpf{}; // LPF 적용 후 값
 
 // LPF 계수 (2초 정도 시간 상수)
@@ -41,9 +41,9 @@ matrix::Vector3f com_hat_dot;
 
 
 // 파라미터
-float torque_dob_fc_est = 1.5f;   // [rad]
-float est_gamma   = 3.2e-6f;   // x,y
-float est_gamma_z = 3.2e-6f;   // z
+float torque_dob_fc_est = 1.0f;   // [rad]
+float est_gamma   = 4.0e-6f;//6.0e-6f;   // x,y
+float est_gamma_z = 5.0e-5f;//8.5e-5f;   // z
 
 float Jxx_est = 0.0768;
 float Jyy_est = 0.0871;
