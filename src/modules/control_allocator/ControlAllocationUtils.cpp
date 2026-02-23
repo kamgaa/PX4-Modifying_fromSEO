@@ -1,5 +1,12 @@
 #include "ControlAllocationUtils.hpp"
 #include <math.h>
+
+static inline float clampf(float x, float lo, float hi)
+{
+    return (x < lo) ? lo : (x > hi) ? hi : x;
+}
+
+
 float force_to_pwm_scale(float force)
 {
 	float a = 2.0962e-05f;
@@ -20,6 +27,8 @@ float force_to_pwm_scale(float force)
         float pwm = (-b + sqrtf(discriminant)) / (2.0f * a);
         //pwm_scaled(i) = pwm;  // 실제 PWM 수치
         pwm_scaled = (pwm - pwm_min) / (pwm_max - pwm_min);
+
+        pwm_scaled = clampf(pwm_scaled, 0.0f, 0.8f);
     }
 
     return pwm_scaled;

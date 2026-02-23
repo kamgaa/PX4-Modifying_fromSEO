@@ -442,8 +442,8 @@ void MulticopterPositionControl::Run()
 	// if((double)manual_setpoint(2) > 0.0){manual_setpoint(2) = 0.0;}
 	float altitude_limit = 0.8f;
 
-	if(manual_setpoint(2)< - altitude_limit){pose_z_setpoint -= 0.001f;}
-	else if(manual_setpoint(2)> altitude_limit){pose_z_setpoint += 0.001f;}
+	if(manual_setpoint(2)< - 0.4f){pose_z_setpoint -= 0.001f;}
+	else if(manual_setpoint(2)> 0.4f){pose_z_setpoint += 0.001f;}
 	else {pose_z_setpoint += 0.f;}
 
 	if(pose_z_setpoint < -altitude_limit){ pose_z_setpoint = -altitude_limit;}

@@ -276,7 +276,7 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	float xi = - 0.01;	// so called b-over-k
 	float r2 = sqrt(2);
 	float r_arm = 0.23; // 0.21 [0923]
-	float l_servo = 0.005; // -0.01; [260218]
+	float l_servo = 0.006; // 0.006; [260222 출근]
 	bool allocation_version_1 = false;
 	/*
 	float th1 = 0.0; //rad
@@ -388,7 +388,7 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	_actuator_sp = _mix * (_control_sp);
 
 	for(int i = 0; i<4; ++i){
-		// if(_actuator_sp(i) > 55.0f){_actuator_sp(i) = 55.0f;}
+		if(_actuator_sp(i) > 55.0f){_actuator_sp(i) = 55.0f;}
 		if(_actuator_sp(i) < 0.5f){_actuator_sp(i) = 0.5f;}
 	}
 
@@ -403,51 +403,48 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 void
 ControlAllocator::publish_actuator_controls()
 {
-	if (!_publish_controls) {
-		return;
-	}
-	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
-	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
-	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+    if (!_publish_controls) {
+        return;
+    }
 
-	actuator_motors_s actuator_motors;
-	actuator_motors.timestamp = hrt_absolute_time();
-	actuator_motors.timestamp_sample = _timestamp_sample;
+    actuator_motors_s actuator_motors{};     // ✅ zero-init
+    thrust_command_s thrust_commands{};       // ✅ zero-init
 
-	thrust_command_s thrust_commands; // custom
+    actuator_motors.timestamp = hrt_absolute_time();
+    actuator_motors.timestamp_sample = _timestamp_sample;
+    actuator_motors.reversible_flags = _param_r_rev.get();
 
-	actuator_motors.reversible_flags = _param_r_rev.get();
+    // 원하는 saturation 범위
+    constexpr float u_min = 0.0f;
+    constexpr float u_max = 0.85f;
 
-	// motors
+    for (int i = 0; i < 4; i++) {
 
-	float force_to_pwm_scale_0 = force_to_pwm_scale(_actuator_sp(0));
-	float force_to_pwm_scale_1 = force_to_pwm_scale(_actuator_sp(1));
-	float force_to_pwm_scale_2 = force_to_pwm_scale(_actuator_sp(2));
-	float force_to_pwm_scale_3 = force_to_pwm_scale(_actuator_sp(3));
+        const float force_cmd = _actuator_sp(i);
 
-	// if(actuator_motors.control[0] != NAN){thrust_commands.thrust_command[0] = _actuator_sp(0);}
-	// if(actuator_motors.control[1] != NAN){thrust_commands.thrust_command[1] = _actuator_sp(1);}
-	// if(actuator_motors.control[2] != NAN){thrust_commands.thrust_command[2] = _actuator_sp(2);}
-	// if(actuator_motors.control[3] != NAN){thrust_commands.thrust_command[3] = _actuator_sp(3);}
+        // raw thrust command
+        if (PX4_ISFINITE(force_cmd)) {
+            thrust_commands.thrust_command[i] = force_cmd;
+        } else {
+            thrust_commands.thrust_command[i] = 0.f;
+        }
 
-	if (!std::isnan(actuator_motors.control[0])) thrust_commands.thrust_command[0] = _actuator_sp(0);
-	if (!std::isnan(actuator_motors.control[1])) thrust_commands.thrust_command[1] = _actuator_sp(1);
-	if (!std::isnan(actuator_motors.control[2])) thrust_commands.thrust_command[2] = _actuator_sp(2);
-	if (!std::isnan(actuator_motors.control[3])) thrust_commands.thrust_command[3] = _actuator_sp(3);
+        // force -> pwm scale
+        float u = force_to_pwm_scale(force_cmd);
 
+        // ✅ publish 직전 최종 saturation (2중 안전)
+        u = math::constrain(u, u_min, u_max);
 
-	actuator_motors.control[0] = force_to_pwm_scale_0;
-	actuator_motors.control[1] = force_to_pwm_scale_1;
-	actuator_motors.control[2] = force_to_pwm_scale_2;
-	actuator_motors.control[3] = force_to_pwm_scale_3;
+        // 혹시 NaN이면 0으로
+        if (!PX4_ISFINITE(u)) {
+            u = 0.f;
+        }
 
-	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
-	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+        actuator_motors.control[i] = u;
+    }
 
-
-	_actuator_motors_pub.publish(actuator_motors);
-	_thrust_command_pub.publish(thrust_commands); //custom
-
+    _actuator_motors_pub.publish(actuator_motors);
+    _thrust_command_pub.publish(thrust_commands);
 }
 
 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //

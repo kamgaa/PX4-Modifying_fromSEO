@@ -39,11 +39,10 @@ matrix::Vector3f com_hat_dot;
 
 
 
-
 // 파라미터
 float torque_dob_fc_est = 1.0f;   // [rad]
 float est_gamma   = 4.0e-6f;//6.0e-6f;   // x,y
-float est_gamma_z = 5.0e-5f;//8.5e-5f;   // z
+float est_gamma_z = 2.0e-4f;//8.5e-5f;   // z
 
 float Jxx_est = 0.0768;
 float Jyy_est = 0.0871;

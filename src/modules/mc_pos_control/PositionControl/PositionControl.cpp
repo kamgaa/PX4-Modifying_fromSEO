@@ -241,8 +241,8 @@ void PositionControl::_velocityControl(const float dt)
 	_acc_sp(1) = acc_sp_velocity(1);
 	_acc_sp(2) = acc_sp_velocity(2);
 
-	_acc_sp(0) = math::constrain(_acc_sp(0), -_lim_acc_horizontal, _lim_acc_horizontal);
-	_acc_sp(1) = math::constrain(_acc_sp(1), -_lim_acc_horizontal, _lim_acc_horizontal);
+	_acc_sp(0) = math::constrain(_acc_sp(0), -3.0f, 3.0f);
+	_acc_sp(1) = math::constrain(_acc_sp(1), -3.0f, 3.0f);
 	_acc_sp(2) = math::constrain(_acc_sp(2), -_lim_acc_vertical, _lim_acc_vertical);
 
 	float mass = 8.0f;
@@ -252,6 +252,7 @@ void PositionControl::_velocityControl(const float dt)
 	_thr_sp(0) = mass*_acc_sp(0);
 	_thr_sp(1) = mass*_acc_sp(1);
 	_thr_sp(2) = mass*_acc_sp(2);
+
 
 	// const Vector3f g_world(0.f, 0.f, CONSTANTS_ONE_G); // 중력보상 할려면 이거써라
 	// const Vector3f g_body = _w2b * g_world; // 중력보상 할려면 이거써라

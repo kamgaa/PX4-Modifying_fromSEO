@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "/home/seosuk/Downloads/PX4-Autopilot/src/drivers/lights",
+    "cmake.sourceDirectory": "/home/seosuk/Desktop/PX4-Modifying/src/drivers/magnetometer",
     "files.associations": {
         "random": "cpp"
     },
