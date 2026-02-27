@@ -40,14 +40,21 @@ matrix::Vector3f com_hat_dot;
 
 
 // 파라미터
-float torque_dob_fc_est = 1.0f;   // [rad]
-float est_gamma   = 4.0e-6f;//6.0e-6f;   // x,y
-float est_gamma_z = 2.0e-4f;//8.5e-5f;   // z
+float torque_dob_fc_est = 2.0f;   // [rad]
+float est_gamma   = 7.0e-6f;//6.0e-6f;   // x,y
+float est_gamma_z = 2.2e-4f;//8.5e-5f;   // z
+
+// float Jxx_est = 0.0768;
+// float Jyy_est = 0.0871;
+// float Jzz_est = 0.113;
+// static float mass = 8.0f;
+
 
 float Jxx_est = 0.0768;
 float Jyy_est = 0.0871;
 float Jzz_est = 0.113;
-// static float mass = 8.0f;
+
+
 
 // // === [추가] 축별 변화율 제한(절대값, 단위: m/s) ===
 // float com_rate_lim_x = 1000000.0f;
@@ -141,6 +148,27 @@ void dob_based_com_estimator(float dt, matrix::Vector3f torque_dhat, matrix::Vec
     com_update(1) += (est_gamma   * com_hat_dot(1)) * dt;
     if (z_estimation_flag) com_update(2) += (est_gamma_z * com_hat_dot(2)) * dt;
 
+    // if (z_estimation_flag)
+    // {
+    //     // ============================================================
+    //     // Z축 업데이트: atan soft-saturation (MATLAB 예제와 동일)
+    //     //  - raw 입력: u = est_gamma_z * com_hat_dot(2)
+    //     //  - 제한: ±sat (sat = 0.004)
+    //     //  - soft sat:
+    //     //      u_atan = sat * (2/pi) * atan(u / k)
+    //     //    여기서 k = sat*(pi/2)*0.3
+    //     // ============================================================
+    //     constexpr float sat = 0.004f;                 // ±0.004
+    //     constexpr float two_over_pi = 0.636619772f;   // 2/pi
+    //     constexpr float k = sat * 1.570796327f * 0.3f; // sat*(pi/2)*0.3
+
+    //     const float u = est_gamma_z * com_hat_dot(2);          // raw update rate (before sat)
+    //     const float u_atan = sat * two_over_pi * atanf(u / k); // soft-saturated update rate
+
+    //     com_update(2) += u_atan * dt;
+    // }
+
+
 
 
 
@@ -177,5 +205,7 @@ void dob_based_com_estimator(float dt, matrix::Vector3f torque_dhat, matrix::Vec
     com_log.com_update[1] = com_update(1);
     com_log.com_update[2] = com_update(2);
 
-
+    com_log.com_hat_dot[0] = est_gamma * com_hat_dot(0);
+    com_log.com_hat_dot[1] = est_gamma * com_hat_dot(1);
+    com_log.com_hat_dot[2] = z_estimation_flag ? (est_gamma_z * com_hat_dot(2)) : 0.f;
 }

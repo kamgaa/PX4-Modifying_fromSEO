@@ -403,7 +403,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 			 if(_custom_control_mode.custom_mode_flag){
 
 				if (_custom_control_mode.trajectory_flag) dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, true);
-				else dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, true);
+				else dob_based_com_estimator(dt, dhat_vec, _thrust_setpoint, center_of_mass_update, _lin_accel_body, false);
 
 			}else{
 
@@ -413,14 +413,47 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 				dob_based_com_estimator(dt, desired_tau_PID_rpy_zero,tau_rpy_tilde_zero,center_of_mass_update, _lin_accel_body, false);
 			 }
 
-			 _center_of_mass_pub.publish(center_of_mass_update);
+
+
+			_center_of_mass_pub.publish(center_of_mass_update);
+
+			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ pdot based feed forward torque term 제시 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+
+
+			// // ================= CoM-rate induced torque FF =================
+			// // p_dot estimate from estimator (body frame)
+			// matrix::Vector3f p_dot_hat{
+			// center_of_mass_update.com_hat_dot[0],
+			// center_of_mass_update.com_hat_dot[1],
+			// center_of_mass_update.com_hat_dot[2]
+			// };
+
+			// // Force vector (body frame)
+			// // NOTE: If _thrust_setpoint is normalized, you MUST convert it to Newtons before using it here.
+			// matrix::Vector3f F_body = _thrust_setpoint;
+
+			// // tau_pdot = p_dot x F
+			// matrix::Vector3f tau_pdot_ff = p_dot_hat.cross(F_body);
+
+			// // (optional) safety clamp
+			// tau_pdot_ff(0) = math::constrain(tau_pdot_ff(0), -5.0f, 5.0f);
+			// tau_pdot_ff(1) = math::constrain(tau_pdot_ff(1), -5.0f, 5.0f);
+			// tau_pdot_ff(2) = math::constrain(tau_pdot_ff(2), -5.0f, 5.0f);
+
+			// // Add feedforward torque
+			// vehicle_torque_setpoint.xyz[0] -= tau_pdot_ff(0);
+			// vehicle_torque_setpoint.xyz[1] -= tau_pdot_ff(1);
+			// vehicle_torque_setpoint.xyz[2] -= tau_pdot_ff(2);
+
 
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ Yaw trimming Logic ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ Yaw trimming Logic (Butterworth + dt Moving Average) ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 			// RT(고역) + TVC(저역) 분리: Butterworth(2차) 유지, fs = 1/dt 대신 이동평균(dt) 기반
-			constexpr float kYawSplitFc_Hz = 0.4f;   // TVC 저역 컷오프 [Hz]
+			constexpr float kYawSplitFc_Hz = 0.0f;   // TVC 저역 컷오프 [Hz]
 			constexpr float kYawRtMax_Nm   = 1.0f;   // RT 권한 한계 [Nm]
 			constexpr float kMinFs_Hz      = 50.f;   // 보호용 최소 fs
 			constexpr float kMaxFs_Hz      = 2000.f; // 보호용 최대 fs

@@ -276,7 +276,7 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	float xi = - 0.01;	// so called b-over-k
 	float r2 = sqrt(2);
 	float r_arm = 0.23; // 0.21 [0923]
-	float l_servo = 0.006; // 0.006; [260222 출근]
+	float l_servo = -0.005; // 0.006; [260222 출근]
 	bool allocation_version_1 = false;
 	/*
 	float th1 = 0.0; //rad
