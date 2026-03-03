@@ -340,6 +340,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 				 vehicle_torque_setpoint.xyz[1] = tau_rpy_tilde(1);
 				 vehicle_torque_setpoint.xyz[2] = tau_rpy_tilde(2);
 
+				 l1_adaptive_reset();
 			 }
 			 else
 			 {
@@ -348,7 +349,9 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 					if(_custom_control_mode.l1_adaptive_flag)
 					{
 
-						l1_adaptive_controller(dt, desired_tau_PID_rpy, rates, _lin_accel_body, l1_tau_tilde, l1_dhat_tau, l1_tau_comp_raw, l1_tau_comp_lpf, _thrust_setpoint);
+						l1_adaptive_controller(dt, desired_tau_PID_rpy, rates,
+						l1_tau_tilde, l1_dhat_tau,
+						l1_tau_comp_raw, l1_tau_comp_lpf);
 
 						// torque command
 						vehicle_torque_setpoint.xyz[0] = l1_tau_tilde(0);
@@ -362,6 +365,15 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 						vehicle_torque_setpoint.xyz[0] = desired_tau_PID_rpy(0);
 						vehicle_torque_setpoint.xyz[1] = desired_tau_PID_rpy(1);
 						vehicle_torque_setpoint.xyz[2] = desired_tau_PID_rpy(2);
+
+						// ✅ L1 OFF면 리셋
+						l1_adaptive_reset();
+
+						// ✅ 로그 일관성 위해 0으로 만들기(선택 강추)
+						l1_dhat_tau      = Vector3f(0.f, 0.f, 0.f);
+						l1_tau_comp_raw  = Vector3f(0.f, 0.f, 0.f);
+						l1_tau_comp_lpf  = Vector3f(0.f, 0.f, 0.f);
+						l1_tau_tilde     = desired_tau_PID_rpy; // 또는 0
 					}
 
 			 }
@@ -391,6 +403,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 					 _torque_dhat.xyz[2]);
 			 _torque_dhat_pub.publish(_torque_dhat);
 
+
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ CoM Estimator Logic ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
@@ -413,10 +426,7 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 				dob_based_com_estimator(dt, desired_tau_PID_rpy_zero,tau_rpy_tilde_zero,center_of_mass_update, _lin_accel_body, false);
 			 }
 
-
-
-			_center_of_mass_pub.publish(center_of_mass_update);
-
+			 _center_of_mass_pub.publish(center_of_mass_update);
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ pdot based feed forward torque term 제시 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 			 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
